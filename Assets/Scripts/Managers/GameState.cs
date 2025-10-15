@@ -3,14 +3,15 @@ using System.Collections.Generic;
 
 public class GameState : MonoBehaviour
 {
+    public static GameState Instance { get; private set; }
+
     [System.Serializable]
     public class GameStats
     {
-        public int population = 50;
-        public int fear = 30;
+        public int population = 100;
+        public int fear = 50;
         public int divineFavor = 50;
         public int karma = 50;
-        public int gold = 100;
 
         public void ClampValues()
         {
@@ -23,8 +24,15 @@ public class GameState : MonoBehaviour
 
     public GameStats currentStats = new GameStats();
 
-    // Single instance for easy access
-    public static GameState Instance { get; private set; }
+    // Track decision counts for delayed effects
+    public int recentExecutions = 0;
+    public int recentExiles = 0;
+    public int recentForgives = 0;
+    public int confiscatedFromInnocents = 0;
+    public int currentPrisoners = 0;
+    public int tortureCount = 0;
+    public int trialByOrdealCount = 0;
+    public int publicHumiliationCount = 0;
 
     void Awake()
     {

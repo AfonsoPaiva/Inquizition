@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 98880731}
   - component: {fileID: 98880730}
   - component: {fileID: 98880729}
-  - component: {fileID: 98880733}
+  - component: {fileID: 98880734}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -230,7 +230,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &98880733
+--- !u!114 &98880734
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -239,7 +239,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 98880728}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e91e20e977994cf4b8c5a3adcc6fd057, type: 3}
+  m_Script: {fileID: 11500000, guid: 4f4f4d4ae0e54f8459acb956ade42d07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   decisionPanel: {fileID: 1929919590}
@@ -247,12 +247,16 @@ MonoBehaviour:
   crimeText: {fileID: 1210629905}
   descriptionText: {fileID: 1336721890}
   statsText: {fileID: 1404605649}
-  executeButton: {fileID: 1236307507}
-  exileButton: {fileID: 526657944}
-  forgiveButton: {fileID: 1951836845}
+  decisionButton1: {fileID: 1236307507}
+  decisionButton2: {fileID: 526657944}
+  decisionButton3: {fileID: 1951836845}
+  decisionText1: {fileID: 141717096}
+  decisionText2: {fileID: 759024477}
+  decisionText3: {fileID: 1340808523}
+  playerCamera: {fileID: 330585548}
   characterPrefab: {fileID: 4137979460231255296, guid: f29d95ff902c3244fab3ca6193857c9f, type: 3}
   spawnPoint: {fileID: 554142811}
-  playerCamera: {fileID: 330585548}
+  characterJsonFile: {fileID: 4900000, guid: 8588d1d31badf844db8f803bfceb2ecd, type: 3}
 --- !u!1 &141717094
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,7 +269,7 @@ GameObject:
   - component: {fileID: 141717097}
   - component: {fileID: 141717096}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: DecisionText1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1013,7 +1017,7 @@ GameObject:
   - component: {fileID: 759024478}
   - component: {fileID: 759024477}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: DEcisionTExt2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1171,7 +1175,14 @@ MonoBehaviour:
     fear: 30
     divineFavor: 50
     karma: 50
-    gold: 100
+  recentExecutions: 0
+  recentExiles: 0
+  recentForgives: 0
+  confiscatedFromInnocents: 0
+  currentPrisoners: 0
+  tortureCount: 0
+  trialByOrdealCount: 0
+  publicHumiliationCount: 0
 --- !u!4 &1113130825
 Transform:
   m_ObjectHideFlags: 0
@@ -1214,14 +1225,14 @@ RectTransform:
   m_GameObject: {fileID: 1210629903}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.67296, y: 0.67296, z: 0.67296}
+  m_LocalScale: {x: 0.4428095, y: 0.42334843, z: 0.54804516}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1929919594}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: 69.2}
+  m_AnchoredPosition: {x: -0, y: 109.4}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1210629905
@@ -1309,7 +1320,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -501.15863, y: 0, z: -553.5314, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1483,14 +1494,14 @@ RectTransform:
   m_GameObject: {fileID: 1336721888}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.44314, y: 0.44314, z: 0.44314}
+  m_LocalScale: {x: 0.31694657, y: 0.40716225, z: 0.58414716}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1929919594}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -16}
+  m_AnchoredPosition: {x: -20.1, y: 51.6}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1336721890
@@ -1578,7 +1589,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -768.87604, y: 0, z: -558.06805, w: -233.89095}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1604,7 +1615,7 @@ GameObject:
   - component: {fileID: 1340808524}
   - component: {fileID: 1340808523}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: DEcisionTExt3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1898,7 +1909,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -23, y: 134}
+  m_AnchoredPosition: {x: -23, y: 157.2}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1467474818
@@ -1986,7 +1997,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -103.65556, w: 0}
+  m_margin: {x: -282.58383, y: 0, z: -384.58698, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

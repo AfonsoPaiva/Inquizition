@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 4f4f4d4ae0e54f8459acb956ade42d07
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - decisionPanel: {instanceID: 0}
+  - characterNameText: {instanceID: 0}
+  - crimeText: {instanceID: 0}
+  - descriptionText: {instanceID: 0}
+  - statsText: {instanceID: 0}
+  - executeButton: {instanceID: 0}
+  - exileButton: {instanceID: 0}
+  - forgiveButton: {instanceID: 0}
+  - playerCamera: {instanceID: 0}
+  - characterPrefab: {instanceID: 0}
+  - spawnPoint: {instanceID: 0}
+  - characterJsonFile: {fileID: 4900000, guid: 8588d1d31badf844db8f803bfceb2ecd, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
