@@ -12,6 +12,7 @@ public class GameState : MonoBehaviour
         public int fear = 50;
         public int divineFavor = 50;
         public int karma = 50;
+        public int gold = 100; 
 
         public void ClampValues()
         {
@@ -19,6 +20,7 @@ public class GameState : MonoBehaviour
             fear = Mathf.Clamp(fear, 0, 100);
             divineFavor = Mathf.Clamp(divineFavor, 0, 100);
             karma = Mathf.Clamp(karma, 0, 100);
+            gold = Mathf.Max(0, gold);
         }
     }
 
@@ -33,6 +35,15 @@ public class GameState : MonoBehaviour
     public int tortureCount = 0;
     public int trialByOrdealCount = 0;
     public int publicHumiliationCount = 0;
+
+    // New tracking variables
+    public int askGodCount = 0;
+    public int corruptionLevel = 0;
+    public bool divineFavorCrisis = false;
+    public bool godRevealedTruth = false;
+    public bool revealedGuiltStatus = false;
+    public string lastDecisionType = "";
+    public List<string> sparedCharacters = new List<string>();
 
     void Awake()
     {

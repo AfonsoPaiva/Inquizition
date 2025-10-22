@@ -32,29 +32,18 @@ public class character_mov : MonoBehaviour
 
     void TriggerOtherAction()
     {
+        // Only trigger if makedecision is assigned
         if (makedecision != null)
         {
             makedecision.ShowDecision();
         }
+
     }
 
     // This will be called by Makedecision after a choice is made
     public void OnDecisionMade()
     {
         decisionMade = true;
-
-        // Start the respawn process
-        StartCoroutine(RespawnCharacter());
-    }
-
-    private System.Collections.IEnumerator RespawnCharacter()
-    {
-        // Wait a moment before destroying (optional)
-        yield return new WaitForSeconds(1f);
-
-        // Destroy this character
-        Destroy(gameObject);
-
-        // The Makedecision script will handle creating a new one
+        // Destruction is now handled by Makedecision script
     }
 }

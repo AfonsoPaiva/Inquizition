@@ -28,7 +28,13 @@ public partial class Makedecision
             TrialByOrdeal,
             RedemptionQuest,
             PublicHumiliation,
-            BanishWilderness
+            BanishWilderness,
+            // New context-dependent decisions
+            SpareWithWarning,
+            CollectivePunishment,
+            SacrificeToGod,
+            Corruption,
+            AskGodForGuidance
         }
 
         // All possible decisions
@@ -43,7 +49,12 @@ public partial class Makedecision
             DecisionType.TrialByOrdeal,
             DecisionType.RedemptionQuest,
             DecisionType.PublicHumiliation,
-            DecisionType.BanishWilderness
+            DecisionType.BanishWilderness,
+            DecisionType.SpareWithWarning,
+            DecisionType.CollectivePunishment,
+            DecisionType.SacrificeToGod,
+            DecisionType.Corruption,
+            DecisionType.AskGodForGuidance
         };
 
         // Current active decisions for the buttons
@@ -55,43 +66,88 @@ public partial class Makedecision
             delayedEffects.Clear();
         }
 
-        public static void SelectRandomDecisions()
+        public static void SelectRandomDecisions(Characters.Character currentCharacter = null, GameState gameState = null)
         {
             currentActiveDecisions.Clear();
 
-            // Always include the basic three decisions
+            // Create a pool of ALL available decisions
             List<DecisionType> availablePool = new List<DecisionType>(allDecisions);
 
-            // Remove the basic three from the pool so we don't duplicate
-            availablePool.Remove(DecisionType.Execute);
-            availablePool.Remove(DecisionType.Exile);
-            availablePool.Remove(DecisionType.Forgive);
+            // Add context-dependent decisions if conditions are met FIRST
+            // This ensures they have priority in the random selection
+            List<DecisionType> contextDecisions = new List<DecisionType>();
+
+            if (currentCharacter != null && gameState != null)
+            {
+                // SPARE WITH WARNING - Only if first-time offender, minor crime, shows remorse
+                if (currentCharacter.isFirstTimeOffender &&
+                    currentCharacter.crimeSeverity == "minor" &&
+                    currentCharacter.showsRemorse &&
+                    !contextDecisions.Contains(DecisionType.SpareWithWarning))
+                {
+                    contextDecisions.Add(DecisionType.SpareWithWarning);
+                    availablePool.Remove(DecisionType.SpareWithWarning);
+                }
+
+                // COLLECTIVE PUNISHMENT - Only if part of conspiracy
+                if (currentCharacter.isPartOfConspiracy &&
+                    !contextDecisions.Contains(DecisionType.CollectivePunishment))
+                {
+                    contextDecisions.Add(DecisionType.CollectivePunishment);
+                    availablePool.Remove(DecisionType.CollectivePunishment);
+                }
+
+                // SACRIFICE TO GOD - Only if Divine Favor < 20
+                if (gameState.currentStats.divineFavor < 20 &&
+                    !contextDecisions.Contains(DecisionType.SacrificeToGod))
+                {
+                    contextDecisions.Add(DecisionType.SacrificeToGod);
+                    availablePool.Remove(DecisionType.SacrificeToGod);
+                }
+
+                // CORRUPTION - Only if character offers bribe and player has low divine favor
+                if (currentCharacter.offersBribe && gameState.currentStats.divineFavor < 40 &&
+                    !contextDecisions.Contains(DecisionType.Corruption))
+                {
+                    contextDecisions.Add(DecisionType.Corruption);
+                    availablePool.Remove(DecisionType.Corruption);
+                }
+
+                // ASK GOD FOR GUIDANCE - Only if Divine Favor > 60 and used less than 2 times
+                if (gameState.currentStats.divineFavor > 60 && gameState.askGodCount < 2 &&
+                    !contextDecisions.Contains(DecisionType.AskGodForGuidance))
+                {
+                    contextDecisions.Add(DecisionType.AskGodForGuidance);
+                    availablePool.Remove(DecisionType.AskGodForGuidance);
+                }
+            }
+
+            // Add context decisions first (they're guaranteed to appear if conditions are met)
+            currentActiveDecisions.AddRange(contextDecisions);
 
             // Shuffle the remaining pool
             availablePool = availablePool.OrderBy(x => random.Next()).ToList();
 
-            // Add the basic three plus random ones to make 10 total options
-            currentActiveDecisions.Add(DecisionType.Execute);
-            currentActiveDecisions.Add(DecisionType.Exile);
-            currentActiveDecisions.Add(DecisionType.Forgive);
+            // Calculate how many more decisions we need to reach 3 total
+            int decisionsNeeded = 3 - currentActiveDecisions.Count;
 
-            // Add 0-2 random additional decisions (30% chance for each)
-            if (random.Next(0, 100) < 30 && availablePool.Count > 0)
+            // Add random decisions from the available pool
+            for (int i = 0; i < decisionsNeeded && availablePool.Count > 0; i++)
             {
                 currentActiveDecisions.Add(availablePool[0]);
                 availablePool.RemoveAt(0);
             }
 
-            if (random.Next(0, 100) < 30 && availablePool.Count > 0)
+            // If we still don't have 3 decisions (edge case), add any remaining
+            while (currentActiveDecisions.Count < 3 && availablePool.Count > 0)
             {
                 currentActiveDecisions.Add(availablePool[0]);
                 availablePool.RemoveAt(0);
             }
 
-            // Shuffle the final list so buttons are in random order
+            // Final shuffle to randomize button positions
             currentActiveDecisions = currentActiveDecisions.OrderBy(x => random.Next()).ToList();
 
-            Debug.Log($"Selected decisions: {string.Join(", ", currentActiveDecisions)}");
         }
 
         public static List<DecisionType> GetCurrentActiveDecisions()
@@ -113,6 +169,12 @@ public partial class Makedecision
                 case DecisionType.RedemptionQuest: return "REDEMPTION QUEST";
                 case DecisionType.PublicHumiliation: return "PUBLIC HUMILIATION";
                 case DecisionType.BanishWilderness: return "BANISH TO WILDERNESS";
+                // New decisions
+                case DecisionType.SpareWithWarning: return "SPARE (WITH WARNING)";
+                case DecisionType.CollectivePunishment: return "COLLECTIVE PUNISHMENT";
+                case DecisionType.SacrificeToGod: return "SACRIFICE TO GOD";
+                case DecisionType.Corruption: return "ACCEPT BRIBE";
+                case DecisionType.AskGodForGuidance: return "ASK GOD FOR GUIDANCE";
                 default: return decisionType.ToString();
             }
         }
@@ -131,6 +193,12 @@ public partial class Makedecision
                 case DecisionType.RedemptionQuest: return "Send on holy mission";
                 case DecisionType.PublicHumiliation: return "Shame publicly";
                 case DecisionType.BanishWilderness: return "Exile to cursed lands";
+                // New decisions
+                case DecisionType.SpareWithWarning: return "Show mercy to first-time offenders";
+                case DecisionType.CollectivePunishment: return "Punish entire group for conspiracy";
+                case DecisionType.SacrificeToGod: return "Desperate measure to regain divine favor";
+                case DecisionType.Corruption: return "Accept bribe for favorable judgment";
+                case DecisionType.AskGodForGuidance: return "Divine revelation of truth";
                 default: return "Make a judgment";
             }
         }
@@ -146,7 +214,6 @@ public partial class Makedecision
                 if (effect.turnsUntilEffect <= 0)
                 {
                     effect.effectAction.Invoke();
-                    Debug.Log($"Delayed effect triggered: {effect.description}");
                 }
                 else
                 {
@@ -159,6 +226,9 @@ public partial class Makedecision
         {
             GameState stats = GameState.Instance;
             bool isGuilty = currentCharacter.isGuilty;
+
+            // Store decision type for post-decision dialogue
+            stats.lastDecisionType = decisionType.ToString();
 
             switch (decisionType)
             {
@@ -191,6 +261,22 @@ public partial class Makedecision
                     break;
                 case DecisionType.BanishWilderness:
                     BanishWildernessEffects(currentCharacter, isGuilty);
+                    break;
+                // New decision effects
+                case DecisionType.SpareWithWarning:
+                    SpareWithWarningEffects(currentCharacter, isGuilty);
+                    break;
+                case DecisionType.CollectivePunishment:
+                    CollectivePunishmentEffects(currentCharacter, isGuilty);
+                    break;
+                case DecisionType.SacrificeToGod:
+                    SacrificeToGodEffects(currentCharacter, isGuilty);
+                    break;
+                case DecisionType.Corruption:
+                    CorruptionEffects(currentCharacter, isGuilty);
+                    break;
+                case DecisionType.AskGodForGuidance:
+                    AskGodForGuidanceEffects(currentCharacter, isGuilty);
                     break;
             }
 
@@ -226,7 +312,6 @@ public partial class Makedecision
                         if (stats.recentExecutions >= 3)
                         {
                             stats.currentStats.population -= 10;
-                            Debug.Log("Families flee after multiple executions!");
                         }
                     },
                     description = "Multiple executions consequence"
@@ -240,14 +325,12 @@ public partial class Makedecision
                     turnsUntilEffect = random.Next(2, 4),
                     effectAction = () => {
                         stats.currentStats.divineFavor -= 10;
-                        Debug.Log("God disapproves of your cruelty!");
                     },
                     description = "High fear divine disapproval"
                 });
             }
 
             stats.recentExecutions++;
-            Debug.Log($"Executed {character.characterName}");
         }
 
         // EXILE Decision
@@ -274,7 +357,6 @@ public partial class Makedecision
                     effectAction = () => {
                         stats.currentStats.fear += 15;
                         stats.currentStats.population -= 5;
-                        Debug.Log($"{character.characterName} returned as a worse criminal!");
                     },
                     description = "Exiled criminal returns"
                 });
@@ -287,14 +369,12 @@ public partial class Makedecision
                     turnsUntilEffect = random.Next(3, 6),
                     effectAction = () => {
                         stats.currentStats.fear -= 5;
-                        Debug.Log("Bad rumors spread about your judgment!");
                     },
                     description = "Bad rumors spread"
                 });
             }
 
             stats.recentExiles++;
-            Debug.Log($"Exiled {character.characterName}");
         }
 
         // FORGIVE Decision
@@ -321,7 +401,6 @@ public partial class Makedecision
                     effectAction = () => {
                         stats.currentStats.fear += 10;
                         stats.currentStats.divineFavor -= 5;
-                        Debug.Log($"{character.characterName} committed another crime!");
                     },
                     description = "Forgiven criminal reoffends"
                 });
@@ -336,14 +415,12 @@ public partial class Makedecision
                         stats.currentStats.population += 10;
                         stats.currentStats.divineFavor += 10;
                         stats.currentStats.karma += 10;
-                        Debug.Log("Divine blessing for your mercy!");
                     },
                     description = "Divine blessing"
                 });
             }
 
             stats.recentForgives++;
-            Debug.Log($"Forgave {character.characterName}");
         }
 
         // CONFISCATE Decision
@@ -361,6 +438,9 @@ public partial class Makedecision
             stats.currentStats.divineFavor += divineChange;
             stats.currentStats.karma += karmaChange;
 
+            // Add gold for confiscation
+            stats.currentStats.gold += random.Next(20, 41);
+
             if (!isGuilty && stats.confiscatedFromInnocents >= 2)
             {
                 delayedEffects.Enqueue(new DelayedEffect
@@ -368,14 +448,12 @@ public partial class Makedecision
                     turnsUntilEffect = random.Next(2, 4),
                     effectAction = () => {
                         stats.currentStats.divineFavor -= 15;
-                        Debug.Log("God punishes your greed against innocents!");
                     },
                     description = "Divine punishment for confiscating from innocents"
                 });
             }
 
             if (!isGuilty) stats.confiscatedFromInnocents++;
-            Debug.Log($"Confiscated from {character.characterName}");
         }
 
         // IMPRISON Decision
@@ -400,14 +478,12 @@ public partial class Makedecision
                     turnsUntilEffect = random.Next(3, 6),
                     effectAction = () => {
                         stats.currentStats.fear += 10;
-                        Debug.Log($"{character.characterName} escaped from prison!");
                     },
                     description = "Prison escape"
                 });
             }
 
             stats.currentPrisoners++;
-            Debug.Log($"Imprisoned {character.characterName}");
         }
 
         // TORTURE Decision
@@ -425,20 +501,12 @@ public partial class Makedecision
             stats.currentStats.divineFavor += divineChange;
             stats.currentStats.karma += karmaChange;
 
-            // Special: May reveal information
-            if (random.Next(0, 100) < 60)
+            if (random.Next(0, 100) > 60)
             {
-                Debug.Log("Torture revealed valuable information!");
-                // This could affect future characters
-            }
-            else
-            {
-                Debug.Log("Torture yielded false information!");
                 stats.currentStats.fear -= 5; // People see through the deception
             }
 
             stats.tortureCount++;
-            Debug.Log($"Tortured {character.characterName}");
         }
 
         // TRIAL BY ORDEAL Decision
@@ -460,17 +528,14 @@ public partial class Makedecision
             if (survivesOrdeal)
             {
                 stats.currentStats.population += 5;
-                Debug.Log($"{character.characterName} survived the ordeal - proven innocent!");
             }
             else
             {
                 stats.currentStats.population -= 10;
                 stats.currentStats.fear += 5;
-                Debug.Log($"{character.characterName} died during ordeal - proven guilty!");
             }
 
             stats.trialByOrdealCount++;
-            Debug.Log($"Subjected {character.characterName} to trial by ordeal");
         }
 
         // REDEMPTION QUEST Decision
@@ -499,7 +564,6 @@ public partial class Makedecision
                     effectAction = () => {
                         stats.currentStats.population += 10;
                         stats.currentStats.divineFavor += 10;
-                        Debug.Log($"{character.characterName} returned successful from redemption quest!");
                     },
                     description = "Successful redemption quest"
                 });
@@ -512,13 +576,11 @@ public partial class Makedecision
                     effectAction = () => {
                         stats.currentStats.divineFavor -= 10;
                         stats.currentStats.population -= 5;
-                        Debug.Log($"{character.characterName} failed the redemption quest!");
                     },
                     description = "Failed redemption quest"
                 });
             }
 
-            Debug.Log($"Sent {character.characterName} on redemption quest");
         }
 
         // PUBLIC HUMILIATION Decision
@@ -543,14 +605,12 @@ public partial class Makedecision
                     turnsUntilEffect = random.Next(3, 6),
                     effectAction = () => {
                         stats.currentStats.fear += 10;
-                        Debug.Log($"{character.characterName} seeks revenge through worse crimes!");
                     },
                     description = "Humiliation leads to revenge"
                 });
             }
 
             stats.publicHumiliationCount++;
-            Debug.Log($"Publicly humiliated {character.characterName}");
         }
 
         // BANISH TO WILDERNESS Decision
@@ -578,19 +638,122 @@ public partial class Makedecision
                         if (stats.currentStats.divineFavor > 70)
                         {
                             stats.currentStats.divineFavor += 20;
-                            Debug.Log($"{character.characterName} returned as a blessed prophet!");
                         }
                         else
                         {
                             stats.currentStats.fear += 25;
-                            Debug.Log($"{character.characterName} returned as a cursed demon!");
                         }
                     },
                     description = "Banished person returns transformed"
                 });
             }
 
-            Debug.Log($"Banished {character.characterName} to wilderness");
+        }
+
+        // SPARE WITH WARNING Decision
+        private static void SpareWithWarningEffects(Characters.Character character, bool isGuilty)
+        {
+            GameState stats = GameState.Instance;
+
+            int popChange = 3;
+            int fearChange = -5;
+            int divineChange = 5;
+            int karmaChange = 8;
+
+            stats.currentStats.population += popChange;
+            stats.currentStats.fear += fearChange;
+            stats.currentStats.divineFavor += divineChange;
+            stats.currentStats.karma += karmaChange;
+
+            // Special: Mark character in database; if they return, punishment must be severe
+            if (!stats.sparedCharacters.Contains(character.characterName))
+            {
+                stats.sparedCharacters.Add(character.characterName);
+            }
+
+        }
+
+        // COLLECTIVE PUNISHMENT Decision
+        private static void CollectivePunishmentEffects(Characters.Character character, bool isGuilty)
+        {
+            GameState stats = GameState.Instance;
+
+            int popChange = -random.Next(20, 41);
+            int fearChange = random.Next(30, 41);
+            int divineChange = isGuilty ? random.Next(-15, 16) : -random.Next(15, 26);
+            int karmaChange = -random.Next(25, 36);
+
+            stats.currentStats.population += popChange;
+            stats.currentStats.fear += fearChange;
+            stats.currentStats.divineFavor += divineChange;
+            stats.currentStats.karma += karmaChange;
+
+            // Special: Prevents rebellion for 5-8 cards
+            delayedEffects.Enqueue(new DelayedEffect
+            {
+                turnsUntilEffect = random.Next(5, 9),
+                effectAction = () => {
+                    stats.currentStats.fear += 10; // Rebellion fear returns
+                },
+                description = "Collective punishment rebellion prevention"
+            });
+
+        }
+
+        // SACRIFICE TO GOD Decision
+        private static void SacrificeToGodEffects(Characters.Character character, bool isGuilty)
+        {
+            GameState stats = GameState.Instance;
+
+            int popChange = -random.Next(15, 21);
+            int fearChange = random.Next(25, 36);
+            int divineChange = random.Next(40, 51);
+            int karmaChange = -random.Next(30, 41);
+
+            stats.currentStats.population += popChange;
+            stats.currentStats.fear += fearChange;
+            stats.currentStats.divineFavor += divineChange;
+            stats.currentStats.karma += karmaChange;
+
+            // Special: Resets Divine Favor crisis
+            stats.divineFavorCrisis = false;
+
+        }
+
+        // CORRUPTION Decision
+        private static void CorruptionEffects(Characters.Character character, bool isGuilty)
+        {
+            GameState stats = GameState.Instance;
+
+            int popChange = 0;
+            int fearChange = -10;
+            int divineChange = -random.Next(20, 31);
+            int karmaChange = -random.Next(20, 31);
+
+            stats.currentStats.population += popChange;
+            stats.currentStats.fear += fearChange;
+            stats.currentStats.divineFavor += divineChange;
+            stats.currentStats.karma += karmaChange;
+
+            // Special: Unlocks "corruption path" with more bribe opportunities
+            stats.corruptionLevel++;
+            stats.currentStats.gold += 50;
+
+        }
+
+        // ASK GOD FOR GUIDANCE Decision
+        private static void AskGodForGuidanceEffects(Characters.Character character, bool isGuilty)
+        {
+            GameState stats = GameState.Instance;
+
+            int divineChange = -10;
+            stats.currentStats.divineFavor += divineChange;
+            stats.askGodCount++;
+
+            // Special: Reveals true guilt/innocence of character
+            stats.godRevealedTruth = true;
+            stats.revealedGuiltStatus = character.isGuilty;
+
         }
     }
 }

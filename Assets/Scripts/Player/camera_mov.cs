@@ -14,7 +14,7 @@ public class camera_mov : MonoBehaviour
     [SerializeField] private Transform playerBody;
 
     private float xRotation = 0f;
-    private bool canLook = true; // Added
+    private bool canLook = true;
 
     void Start()
     {
@@ -24,25 +24,31 @@ public class camera_mov : MonoBehaviour
 
     void Update()
     {
-        if (!canLook) return; // Stop camera rotation if disabled
+        if (!canLook) return;
 
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
         if (invertY) mouseY = -mouseY;
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minVerticalAngle, maxVerticalAngle);
 
-        transform.rotation = Quaternion.Euler(xRotation, transform.eulerAngles.y + mouseX, 0f);
+        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        playerBody.Rotate(Vector3.up * mouseX);
     }
 
-    public void SetSensitivity(float newSensitivity)
+    public void EnableLook()
     {
-        mouseSensitivity = newSensitivity;
+        canLook = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
-    // New methods to enable/disable camera look
-    public void EnableLook() => canLook = true;
-    public void DisableLook() => canLook = false;
+    public void DisableLook()
+    {
+        canLook = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
 }
