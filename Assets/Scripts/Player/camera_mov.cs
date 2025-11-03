@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class camera_mov : MonoBehaviour
 {
@@ -36,6 +37,57 @@ public class camera_mov : MonoBehaviour
 
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         playerBody.Rotate(Vector3.up * mouseX);
+    }
+
+    public IEnumerator MoveCameraToOutcome(Transform outcomePoint, camera_mov playerCamera)
+    {
+        if (playerCamera == null || outcomePoint == null) yield break;
+
+        playerCamera.DisableLook();
+        Vector3 startPosition = playerCamera.transform.position;
+        Quaternion startRotation = playerCamera.transform.rotation;
+        Vector3 targetPosition = outcomePoint.position;
+        Quaternion targetRotation = outcomePoint.rotation;
+
+        float duration = 1.5f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            playerCamera.transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            playerCamera.transform.rotation = Quaternion.Lerp(startRotation, targetRotation, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        playerCamera.transform.position = targetPosition;
+        playerCamera.transform.rotation = targetRotation;
+    }
+
+
+    public static IEnumerator ReturnCameraToPlayer(camera_mov playerCamera, Vector3 originalCameraPosition, Quaternion originalCameraRotation)
+    {
+        if (playerCamera == null) yield break;
+
+        Vector3 startPosition = playerCamera.transform.position;
+        Quaternion startRotation = playerCamera.transform.rotation;
+
+        float duration = 1.5f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            playerCamera.transform.position = Vector3.Lerp(startPosition, originalCameraPosition, t);
+            playerCamera.transform.rotation = Quaternion.Lerp(startRotation, originalCameraRotation, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        playerCamera.transform.position = originalCameraPosition;
+        playerCamera.transform.rotation = originalCameraRotation;
+        playerCamera.EnableLook();
     }
 
     public void EnableLook()

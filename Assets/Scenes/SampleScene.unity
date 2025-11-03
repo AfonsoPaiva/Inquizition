@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 60706480}
   - component: {fileID: 60706479}
   m_Layer: 5
-  m_Name: Tooltip_canvas
+  m_Name: Tooltip_canvas_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -216,7 +216,7 @@ RectTransform:
   - {fileID: 1857947046}
   - {fileID: 231146180}
   - {fileID: 876248077}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -346,29 +346,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f4f4d4ae0e54f8459acb956ade42d07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  decisionPanel: {fileID: 1929919590}
-  characterNameText: {fileID: 1467474818}
-  crimeText: {fileID: 1210629905}
-  descriptionText: {fileID: 1336721890}
-  statsText: {fileID: 1404605649}
-  postDecisionText: {fileID: 1878339495}
-  postDecisionPanel: {fileID: 378271120}
-  storePanel: {fileID: 0}
-  decisionButton1: {fileID: 1236307507}
-  decisionButton2: {fileID: 526657944}
-  decisionButton3: {fileID: 1951836845}
-  decisionText1: {fileID: 141717096}
-  decisionText2: {fileID: 759024477}
-  decisionText3: {fileID: 1340808523}
-  tooltipPanel1: {fileID: 60706478}
-  tooltipPanel2: {fileID: 743662249}
-  tooltipPanel3: {fileID: 857340980}
-  tooltipTitle1: {fileID: 231146181}
-  tooltipEffects1: {fileID: 876248078}
-  tooltipTitle2: {fileID: 1277920786}
-  tooltipEffects2: {fileID: 796832504}
-  tooltipTitle3: {fileID: 873133968}
-  tooltipEffects3: {fileID: 1064799024}
   playerCamera: {fileID: 330585548}
   cameraFocusPoint: {fileID: 533987948}
   characterPrefab: {fileID: 4137979460231255296, guid: f29d95ff902c3244fab3ca6193857c9f, type: 3}
@@ -380,10 +357,9 @@ MonoBehaviour:
   spacing: 2
   cameraGoodPoint: {fileID: 533987948}
   cameraBadPoint: {fileID: 265519728}
-  buyPopulationButton: {fileID: 656839628}
-  buyDivineFavorButton: {fileID: 734188452}
-  buyKarmaButton: {fileID: 1956971721}
-  storeMessageText: {fileID: 1848845935}
+  isProcessingDecision: 0
+  godGuidanceRevealed: 0
+  revealedGuiltStatus: 0
   characterJsonFile: {fileID: 4900000, guid: 8588d1d31badf844db8f803bfceb2ecd, type: 3}
 --- !u!1 &141717094
 GameObject:
@@ -725,7 +701,7 @@ RectTransform:
   - {fileID: 656839627}
   - {fileID: 1956971720}
   - {fileID: 734188451}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -744,7 +720,7 @@ GameObject:
   - component: {fileID: 231146182}
   - component: {fileID: 231146181}
   m_Layer: 5
-  m_Name: TItle1
+  m_Name: tooltip_TITLE1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1252,18 +1228,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 378271120}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 11.34}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 613893197}
   - {fileID: 1878339494}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -2.52}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &410087039
@@ -2142,7 +2118,7 @@ GameObject:
   - component: {fileID: 743662251}
   - component: {fileID: 743662250}
   m_Layer: 5
-  m_Name: Tooltip_canvas (1)
+  m_Name: Tooltip_canvas_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2226,7 +2202,7 @@ RectTransform:
   - {fileID: 586459867}
   - {fileID: 1277920785}
   - {fileID: 796832503}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -2381,7 +2357,7 @@ GameObject:
   - component: {fileID: 796832505}
   - component: {fileID: 796832504}
   m_Layer: 5
-  m_Name: Content
+  m_Name: tooltip_Content2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2518,7 +2494,7 @@ GameObject:
   - component: {fileID: 857340982}
   - component: {fileID: 857340981}
   m_Layer: 5
-  m_Name: Tooltip_canvas (2)
+  m_Name: Tooltip_canvas_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2602,7 +2578,7 @@ RectTransform:
   - {fileID: 1347935436}
   - {fileID: 873133967}
   - {fileID: 1064799023}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -2621,7 +2597,7 @@ GameObject:
   - component: {fileID: 873133969}
   - component: {fileID: 873133968}
   m_Layer: 5
-  m_Name: TItle1
+  m_Name: tooltip_TITLE3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2757,7 +2733,7 @@ GameObject:
   - component: {fileID: 876248079}
   - component: {fileID: 876248078}
   m_Layer: 5
-  m_Name: Content
+  m_Name: tooltip_Content1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2893,7 +2869,7 @@ GameObject:
   - component: {fileID: 1064799025}
   - component: {fileID: 1064799024}
   m_Layer: 5
-  m_Name: Content
+  m_Name: tooltip_Content3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3363,7 +3339,7 @@ GameObject:
   - component: {fileID: 1277920787}
   - component: {fileID: 1277920786}
   m_Layer: 5
-  m_Name: TItle1
+  m_Name: tooltip_TITLE2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4106,6 +4082,86 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1467474816}
   m_CullTransparentMesh: 1
+--- !u!1 &1547044486
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1547044488}
+  - component: {fileID: 1547044487}
+  m_Layer: 0
+  m_Name: UI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1547044487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547044486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddb1b9bad95732c489399807fdd9ec3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerCamera: {fileID: 0}
+  makedecision: {fileID: 98880734}
+  decisionPanel: {fileID: 1929919590}
+  characterNameText: {fileID: 1467474818}
+  crimeText: {fileID: 1210629905}
+  descriptionText: {fileID: 1336721890}
+  statsText: {fileID: 1404605649}
+  postDecisionText: {fileID: 1878339495}
+  postDecisionPanel: {fileID: 378271120}
+  storePanel: {fileID: 191061067}
+  tooltipTitle1: {fileID: 231146181}
+  tooltipEffects1: {fileID: 876248078}
+  tooltipTitle2: {fileID: 1277920786}
+  tooltipEffects2: {fileID: 796832504}
+  tooltipTitle3: {fileID: 873133968}
+  tooltipEffects3: {fileID: 1064799024}
+  tooltipPanel1: {fileID: 60706478}
+  tooltipPanel2: {fileID: 743662249}
+  tooltipPanel3: {fileID: 857340980}
+  decisionButton1: {fileID: 1236307507}
+  decisionButton2: {fileID: 526657944}
+  decisionButton3: {fileID: 1951836845}
+  decisionText1: {fileID: 141717096}
+  decisionText2: {fileID: 759024477}
+  decisionText3: {fileID: 1340808523}
+  buyPopulationButton: {fileID: 656839628}
+  buyDivineFavorButton: {fileID: 734188452}
+  buyKarmaButton: {fileID: 1956971721}
+  storeMessageText: {fileID: 1848845935}
+--- !u!4 &1547044488
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547044486}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.52, z: -11.34}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 191061071}
+  - {fileID: 1992238395}
+  - {fileID: 1929919594}
+  - {fileID: 378271124}
+  - {fileID: 60706482}
+  - {fileID: 743662253}
+  - {fileID: 857340984}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1552302393
 GameObject:
   m_ObjectHideFlags: 0
@@ -4847,8 +4903,8 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1929919590}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 11.34}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4859,11 +4915,11 @@ RectTransform:
   - {fileID: 1467474817}
   - {fileID: 1210629904}
   - {fileID: 1336721889}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -2.52}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1929919595
@@ -5238,7 +5294,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1404605648}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547044488}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -5253,9 +5309,6 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 361319363}
   - {fileID: 98880732}
-  - {fileID: 378271124}
-  - {fileID: 1992238395}
-  - {fileID: 1929919594}
   - {fileID: 1113130825}
   - {fileID: 554142811}
   - {fileID: 533987948}
@@ -5263,7 +5316,4 @@ SceneRoots:
   - {fileID: 178721630}
   - {fileID: 1776224295}
   - {fileID: 265519728}
-  - {fileID: 60706482}
-  - {fileID: 743662253}
-  - {fileID: 857340984}
-  - {fileID: 191061071}
+  - {fileID: 1547044488}

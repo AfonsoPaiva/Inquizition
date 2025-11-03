@@ -1,0 +1,29 @@
+fileFormatVersion: 2
+guid: ddb1b9bad95732c489399807fdd9ec3e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - makedecision: {instanceID: 0}
+  - storePanel: {fileID: 4137979460231255296, guid: f29d95ff902c3244fab3ca6193857c9f, type: 3}
+  - tooltipTitle1: {instanceID: 0}
+  - tooltipEffects1: {instanceID: 0}
+  - tooltipTitle2: {instanceID: 0}
+  - tooltipEffects2: {instanceID: 0}
+  - tooltipTitle3: {instanceID: 0}
+  - tooltipEffects3: {instanceID: 0}
+  - decisionButton1: {instanceID: 0}
+  - decisionButton2: {instanceID: 0}
+  - decisionButton3: {instanceID: 0}
+  - decisionText1: {instanceID: 0}
+  - decisionText2: {instanceID: 0}
+  - decisionText3: {instanceID: 0}
+  - buyPopulationButton: {instanceID: 0}
+  - buyDivineFavorButton: {instanceID: 0}
+  - buyKarmaButton: {instanceID: 0}
+  - storeMessageText: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
