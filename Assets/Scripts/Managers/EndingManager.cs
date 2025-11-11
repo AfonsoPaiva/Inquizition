@@ -11,8 +11,20 @@ namespace Assets.Scripts.Managers
         public TextMeshProUGUI endingTitleText;
         public TextMeshProUGUI endingDescriptionText;
         public TextMeshProUGUI finalStatsText;
+        public Image endingImage;
         public Button mainMenuButton;
         public Button playAgainButton;
+
+        [Header("Ending Images")]
+        public Sprite populationRevoltsSprite;
+        public Sprite maniacEndingSprite;
+        public Sprite punishedByGodSprite;
+        public Sprite karmaStruckSprite;
+        public Sprite karmaFreeSprite;
+        public Sprite populationLovesYouSprite;
+        public Sprite relaxedEndingSprite;
+        public Sprite godLovesYouSprite;
+        public Sprite defaultEndingSprite;
 
         void Start()
         {
@@ -45,12 +57,43 @@ namespace Assets.Scripts.Managers
 
             if (finalStatsText != null)
             {
-                finalStatsText.text = $"Final Stats:\n\n" +
+                finalStatsText.text = 
                                      $"Population: {finalPopulation}\n" +
                                      $"Fear: {finalFear}\n" +
                                      $"Divine Favor: {finalDivineFavor}\n" +
                                      $"Karma: {finalKarma}\n" +
                                      $"Gold: {finalGold}";
+            }
+
+            // Set the appropriate ending image
+            if (endingImage != null)
+            {
+                endingImage.sprite = GetEndingSprite(endingName);
+            }
+        }
+
+        private Sprite GetEndingSprite(string endingName)
+        {
+            switch (endingName)
+            {
+                case "Population Revolts":
+                    return populationRevoltsSprite != null ? populationRevoltsSprite : defaultEndingSprite;
+                case "Maniac Ending":
+                    return maniacEndingSprite != null ? maniacEndingSprite : defaultEndingSprite;
+                case "Punished by God":
+                    return punishedByGodSprite != null ? punishedByGodSprite : defaultEndingSprite;
+                case "Karma Struck":
+                    return karmaStruckSprite != null ? karmaStruckSprite : defaultEndingSprite;
+                case "Karma Free":
+                    return karmaFreeSprite != null ? karmaFreeSprite : defaultEndingSprite;
+                case "Population Loves You":
+                    return populationLovesYouSprite != null ? populationLovesYouSprite : defaultEndingSprite;
+                case "Relaxed Ending":
+                    return relaxedEndingSprite != null ? relaxedEndingSprite : defaultEndingSprite;
+                case "God Loves You":
+                    return godLovesYouSprite != null ? godLovesYouSprite : defaultEndingSprite;
+                default:
+                    return defaultEndingSprite;
             }
         }
 
@@ -82,6 +125,10 @@ namespace Assets.Scripts.Managers
 
         private void PlayAgain()
         {
+            // Mark tutorial as completed so it won't play again
+            PlayerPrefs.SetInt("TutorialCompleted", 1);
+            PlayerPrefs.Save();
+
             // Clean up GameState
             if (GameState.Instance != null)
             {

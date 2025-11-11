@@ -59,8 +59,6 @@ public class GameState : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            Debug.Log($"GameState initialized - Gold: {currentStats.gold}");
         }
         else
         {

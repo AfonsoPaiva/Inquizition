@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static Makedecision;
 
@@ -32,6 +33,11 @@ namespace Assets.Scripts.Managers
         public TextMeshProUGUI postDecisionText;
         public GameObject postDecisionPanel;
         public GameObject storePanel;
+
+        [Header("Pause Menu")]
+        public GameObject pauseMenuPanel;
+        public Button continueButton;
+        public Button mainMenuButton;
 
         [Header("Stat Bars (assign Image components)")]
         public Image populationBar;      
@@ -104,6 +110,9 @@ namespace Assets.Scripts.Managers
         private Vector2 hiddenPosition;
         private Vector2 visiblePosition;
 
+        // Pause menu state
+        private bool isPaused = false;
+
         void Awake() { Instance = this; }
 
         private enum StoreItemType
@@ -126,6 +135,21 @@ namespace Assets.Scripts.Managers
 
             if (postDecisionPanel != null)
                 postDecisionPanel.SetActive(false);
+
+            // Initialize pause menu
+            if (pauseMenuPanel != null)
+                pauseMenuPanel.SetActive(false);
+
+            // Setup pause menu buttons
+            if (continueButton != null)
+            {
+                continueButton.onClick.AddListener(ResumeGame);
+            }
+
+            if (mainMenuButton != null)
+            {
+                mainMenuButton.onClick.AddListener(LoadMainMenu);
+            }
 
             // Initialize store panel position
             if (storePanel != null)
@@ -188,10 +212,55 @@ namespace Assets.Scripts.Managers
             UpdateStatsUI();
 
             // Press 'B' to open/close store (like "Buy")
-            if (Input.GetKeyDown(KeyCode.B) && !makedecision.isProcessingDecision && !isAnimating)
+            if (Input.GetKeyDown(KeyCode.B) && !makedecision.isProcessingDecision && !isAnimating && !isPaused)
             {
                 ToggleStore();
             }
+
+            // Press ESC to toggle pause menu
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (isPaused)
+                {
+                    ResumeGame();
+                }
+                else
+                {
+                    PauseGame();
+                }
+            }
+        }
+
+        private void PauseGame()
+        {
+            isPaused = true;
+            Time.timeScale = 0f; // Freeze game time
+
+            if (pauseMenuPanel != null)
+            {
+                pauseMenuPanel.SetActive(true);
+            }
+
+            // Show and unlock cursor
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        private void ResumeGame()
+        {
+            isPaused = false;
+            Time.timeScale = 1f; // Resume game time
+
+            if (pauseMenuPanel != null)
+            {
+                pauseMenuPanel.SetActive(false);
+            }
+        }
+
+        private void LoadMainMenu()
+        {
+            Time.timeScale = 1f; // Reset time scale before changing scenes
+            SceneManager.LoadScene("MenuScene"); // Change to your main menu scene name
         }
 
         public void UpdateTooltipContent(Button button, Decisions.DecisionType decisionType)

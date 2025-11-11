@@ -46,7 +46,17 @@ public class character_mov : MonoBehaviour
         }
     }
 
-    public static IEnumerator MoveCharacterToOutcome(Vector3 targetPosition, Transform judgmentPoint, bool isGoodOutcome)
+    public static IEnumerator MoveCharacterToOutcome(
+        Vector3 targetPosition, 
+        Transform judgmentPoint, 
+        bool isGoodOutcome,
+        AudioClip walkSound,
+        float walkVolume,
+        AudioClip crySound,
+        AudioClip celebrateSound,
+        float emotionVolume,
+        AudioClip decisionSound,
+        float decisionSoundVolume)
     {
         if (Characters.currentCharacterInstance == null) yield break;
 
@@ -55,6 +65,15 @@ public class character_mov : MonoBehaviour
         character_mov charMov = Characters.currentCharacterInstance.GetComponent<character_mov>();
 
         if (animator == null || charMov == null) yield break;
+
+        // Get or add AudioSource
+        AudioSource audioSource = Characters.currentCharacterInstance.GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = Characters.currentCharacterInstance.AddComponent<AudioSource>();
+        }
+        audioSource.spatialBlend = 1f;
+        audioSource.maxDistance = 50f;
 
         charMov.moving = false;
         charMov.decisionMade = true;
@@ -70,14 +89,29 @@ public class character_mov : MonoBehaviour
         
         yield return new WaitForSeconds(0.5f);
 
-        // Step 1: Play outcome emotion animation WITH ROOT MOTION
+        // Step 1: Play outcome emotion animation WITH ROOT MOTION + AUDIO (ONE-SHOT)
         SetAnimationBool(animator, charMov.idleAnimationParameter, false);
         animator.applyRootMotion = true;
         
         string emotionParam = isGoodOutcome ? charMov.celebrateAnimationParameter : charMov.sadAnimationParameter;
+        AudioClip emotionSound = isGoodOutcome ? celebrateSound : crySound;
+        
         SetAnimationBool(animator, emotionParam, true);
+        
+        // Play emotion sound as ONE-SHOT (not looping)
+        if (audioSource != null && emotionSound != null)
+        {
+            audioSource.loop = false;
+            audioSource.PlayOneShot(emotionSound, emotionVolume);
+        }
 
         yield return new WaitForSeconds(2.0f);
+
+        // Stop emotion sound
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
 
         // Step 1.5: Return to IDLE after emotion
         SetAnimationBool(animator, emotionParam, false);
@@ -98,9 +132,18 @@ public class character_mov : MonoBehaviour
         SetAnimationBool(animator, turnParam, false);
         yield return new WaitForSeconds(0.3f);
 
-        // Step 3: Walk to destination
+        // Step 3: Walk to destination + WALKING AUDIO (LOOPING)
         animator.applyRootMotion = false;
         SetAnimationBool(animator, charMov.walkAnimationParameter, true);
+        
+        // Play walking sound (looped)
+        if (audioSource != null && walkSound != null)
+        {
+            audioSource.loop = true;
+            audioSource.clip = walkSound;
+            audioSource.volume = walkVolume;
+            audioSource.Play();
+        }
 
         Vector3 startPosition = characterTransform.position;
         float walkDistance = Vector3.Distance(startPosition, targetPosition);
@@ -117,13 +160,31 @@ public class character_mov : MonoBehaviour
 
         characterTransform.position = targetPosition;
         
-        // Step 4: Character destroyed - no need to reset animations
+        // Stop walking sound
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
+
+        // Stop walking animation
+        SetAnimationBool(animator, charMov.walkAnimationParameter, false);
+        SetAnimationBool(animator, charMov.idleAnimationParameter, true);
+        
+        // Step 4: Play decision-specific sound at destination point (ONE-SHOT, NOT LOOPING)
+        if (audioSource != null && decisionSound != null)
+        {
+            audioSource.loop = false;
+            audioSource.PlayOneShot(decisionSound, decisionSoundVolume);
+            yield return new WaitForSeconds(decisionSound.length); // Wait for sound to finish
+        }
+        
+        // Step 5: Character destroyed
         yield return new WaitForSeconds(0.5f);
         Destroy(Characters.currentCharacterInstance);
         Characters.currentCharacterInstance = null;
     }
 
-    public static IEnumerator MoveQueueForward(Queue<GameObject> characterQueue, Transform spawnPoint, float spacing)
+    public static IEnumerator MoveQueueForward(Queue<GameObject> characterQueue, Transform spawnPoint, float spacing, AudioClip walkSound = null, float walkVolume = 0.7f)
     {
         List<GameObject> characters = new List<GameObject>(characterQueue);
         characterQueue.Clear();
@@ -136,6 +197,16 @@ public class character_mov : MonoBehaviour
             
             Vector3 targetPosition = spawnPoint.position + (spawnPoint.forward * spacing * (i + 1));
 
+            // Get or add AudioSource
+            AudioSource audioSource = character.GetComponent<AudioSource>();
+            if (audioSource == null && walkSound != null)
+            {
+                audioSource = character.AddComponent<AudioSource>();
+                audioSource.loop = true;
+                audioSource.spatialBlend = 1f;
+                audioSource.maxDistance = 50f;
+            }
+
             if (animator != null)
             {
                 animator.applyRootMotion = false;
@@ -145,6 +216,14 @@ public class character_mov : MonoBehaviour
             {
                 SetAnimationBool(animator, charMov.idleAnimationParameter, false);
                 SetAnimationBool(animator, charMov.walkAnimationParameter, true);
+            }
+
+            // Play walking sound with volume control
+            if (audioSource != null && walkSound != null)
+            {
+                audioSource.clip = walkSound;
+                audioSource.volume = walkVolume;
+                audioSource.Play();
             }
 
             float duration = 1f;
@@ -160,6 +239,12 @@ public class character_mov : MonoBehaviour
             }
 
             character.transform.position = targetPosition;
+
+            // Stop walking sound
+            if (audioSource != null)
+            {
+                audioSource.Stop();
+            }
 
             if (animator != null && charMov != null)
             {
@@ -202,7 +287,9 @@ public class character_mov : MonoBehaviour
         Transform judgmentPoint,
         bool godGuidanceRevealed,
         bool revealedGuiltStatus,
-        Makedecision makedecisionInstance
+        Makedecision makedecisionInstance,
+        AudioClip walkSound = null,
+        float walkVolume = 0.7f
     )
     {
         if (characterQueue.Count == 0 || isProcessingDecision) yield break;
@@ -215,6 +302,16 @@ public class character_mov : MonoBehaviour
         Animator animator = nextCharacter.GetComponent<Animator>();
         
         if (animator == null || charMov == null) yield break;
+
+        // Get or add AudioSource
+        AudioSource audioSource = nextCharacter.GetComponent<AudioSource>();
+        if (audioSource == null && walkSound != null)
+        {
+            audioSource = nextCharacter.AddComponent<AudioSource>();
+            audioSource.loop = true;
+            audioSource.spatialBlend = 1f;
+            audioSource.maxDistance = 50f;
+        }
 
         charMov.moving = false;
         charMov.decisionMade = false;
@@ -243,6 +340,14 @@ public class character_mov : MonoBehaviour
             SetAnimationBool(animator, charMov.walkAnimationParameter, true);
         }
 
+        // Play walking sound with volume control
+        if (audioSource != null && walkSound != null)
+        {
+            audioSource.clip = walkSound;
+            audioSource.volume = walkVolume;
+            audioSource.Play();
+        }
+
         float duration = 2f;
         float elapsed = 0f;
 
@@ -255,6 +360,12 @@ public class character_mov : MonoBehaviour
         }
 
         characterTransform.position = targetPos;
+
+        // Stop walking sound
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
 
         if (animator != null && charMov != null)
         {

@@ -34,13 +34,49 @@ public partial class Makedecision : MonoBehaviour
     public float tutorialMoveDuration = 8f;
     public Transform tutorialGuySpawn;
     public GameObject tutorialMessagePanel;
-    public float minimumSpeakDuration = 3.0f; 
+    public float minimumSpeakDuration = 3.0f;
 
     [Header("Tutorial Animation")]
     public string walkAnimationParameter = "isWalking";
     public string turnRightAnimationParameter = "isTurningRight";
     public string turnLeftAnimationParameter = "isTurningLeft";
     public string speakAnimationParameter = "isSpeaking";
+
+    [Header("Tutorial Audio")]
+    public AudioClip footstepSound;
+    public AudioClip tutorialSpeakingSound;
+    [Range(0f, 1f)] public float tutorialFootstepVolume = 0.7f;
+    [Range(0f, 1f)] public float tutorialSpeakingVolume = 0.7f;
+
+    [Header("Character Audio Clips")]
+    public AudioClip characterWalkSound;
+    public AudioClip characterCrySound;
+    public AudioClip characterCelebrateSound;
+    [Range(0f, 1f)] public float characterWalkVolume = 0.7f;
+    [Range(0f, 1f)] public float characterEmotionVolume = 0.7f;
+
+    [Header("UI Sound Effects")]
+    public AudioClip decisionCanvasAppearSound;
+    [Range(0f, 1f)] public float uiSoundVolume = 0.8f;
+
+    [Header("Decision Outcome Sound Effects")]
+    public AudioClip executeSound;
+    public AudioClip exileSound;
+    public AudioClip forgiveSound;
+    public AudioClip confiscateSound;
+    public AudioClip imprisonSound;
+    public AudioClip tortureSound;
+    public AudioClip trialByOrdealSound;
+    public AudioClip redemptionQuestSound;
+    public AudioClip publicHumiliationSound;
+    public AudioClip banishWildernessSound;
+    public AudioClip spareWithWarningSound;
+    public AudioClip acceptBribeSound;
+    public AudioClip collectivePunishmentSound;
+    public AudioClip sacrificeToGodSound;
+    public AudioClip corruptionSound;
+    public AudioClip askGodForGuidanceSound;
+    [Range(0f, 1f)] public float decisionSoundVolume = 0.8f;
 
     public Dictionary<Decisions.DecisionType, string> decisionEffectsCache = new Dictionary<Decisions.DecisionType, string>();
 
@@ -56,12 +92,18 @@ public partial class Makedecision : MonoBehaviour
     public bool revealedGuiltStatus = false;
 
     private UI ui;
+    private AudioSource uiAudioSource;
 
     void Start()
     {
         ui = UI.Instance;
 
         Decisions.InitializeDecisions();
+
+        // Create AudioSource for UI sounds
+        uiAudioSource = gameObject.AddComponent<AudioSource>();
+        uiAudioSource.playOnAwake = false;
+        uiAudioSource.spatialBlend = 0f; // 2D sound
 
         // Ensure cursor is visible and unlocked for UI interaction
         Cursor.lockState = CursorLockMode.None;
@@ -81,14 +123,20 @@ public partial class Makedecision : MonoBehaviour
             character_mov.SpawnCharacterInQueue(i, spawnPoint, characterPrefab, characterQueue, spacing);
         }
 
+        // Check if tutorial has been shown in this session (NOT persistent across game restarts)
+        bool tutorialShownThisSession = PlayerPrefs.GetInt("TutorialShownThisSession", 0) == 1;
+
         // Start tutorial or regular game
-        if (isTutorialActive)
+        if (isTutorialActive && !tutorialShownThisSession)
         {
+            // Mark tutorial as shown for this session
+            PlayerPrefs.SetInt("TutorialShownThisSession", 1);
+            PlayerPrefs.Save();
             StartCoroutine(PlayTutorialSequence());
         }
         else
         {
-            StartCoroutine(character_mov.MoveToJudgmentPosition(characterQueue, isProcessingDecision, judgmentPoint, godGuidanceRevealed, revealedGuiltStatus, this));
+            StartCoroutine(character_mov.MoveToJudgmentPosition(characterQueue, isProcessingDecision, judgmentPoint, godGuidanceRevealed, revealedGuiltStatus, this, characterWalkSound, characterWalkVolume));
         }
     }
 
@@ -130,6 +178,19 @@ public partial class Makedecision : MonoBehaviour
             yield break;
         }
 
+        // Get or add AudioSource component
+        AudioSource tutorialAudioSource = tutorialGuy.GetComponent<AudioSource>();
+        if (tutorialAudioSource == null)
+        {
+            tutorialAudioSource = tutorialGuy.AddComponent<AudioSource>();
+        }
+        
+        // Configure AudioSource
+        tutorialAudioSource.loop = true;
+        tutorialAudioSource.playOnAwake = false;
+        tutorialAudioSource.spatialBlend = 1f; // 3D sound
+        tutorialAudioSource.maxDistance = 50f;
+        
         // Enable root motion so animation controls rotation
         tutorialAnimator.applyRootMotion = true;
 
@@ -158,10 +219,25 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
+        // Start playing footstep sound (continuous loop)
+        if (tutorialAudioSource != null && footstepSound != null)
+        {
+            tutorialAudioSource.loop = true;
+            tutorialAudioSource.clip = footstepSound;
+            tutorialAudioSource.volume = tutorialFootstepVolume;
+            tutorialAudioSource.Play();
+        }
+        
         float walkDistance = 10f;
         Vector3 walkDirection = tutorialGuy.transform.forward;
         
         yield return StartCoroutine(MoveTutorialCharacterPositionOnly(tutorialGuy, walkDirection, walkDistance, tutorialMoveDuration));
+
+        // Stop footstep sound
+        if (tutorialAudioSource != null)
+        {
+            tutorialAudioSource.Stop();
+        }
 
         // Stop walking
         if (tutorialAnimator != null && !string.IsNullOrWhiteSpace(walkAnimationParameter))
@@ -183,7 +259,6 @@ public partial class Makedecision : MonoBehaviour
             }
         }
         
-        // Wait for turn animation duration (adjust this to match your animation length)
         yield return new WaitForSeconds(2.0f);
         
         if (tutorialAnimator != null && !string.IsNullOrEmpty(turnRightAnimationParameter))
@@ -203,6 +278,13 @@ public partial class Makedecision : MonoBehaviour
             {
                 tutorialAnimator.SetBool(speakAnimationParameter, true);
             }
+        }
+
+        // Play speaking sound as ONE-SHOT (not looping)
+        if (tutorialAudioSource != null && tutorialSpeakingSound != null)
+        {
+            tutorialAudioSource.loop = false;
+            tutorialAudioSource.PlayOneShot(tutorialSpeakingSound, tutorialSpeakingVolume);
         }
 
         // Camera focuses on tutorial character's upper body/head for speaking
@@ -237,6 +319,12 @@ public partial class Makedecision : MonoBehaviour
             tutorialMessagePanel.SetActive(false);
         }
 
+        // Stop speaking sound (if still playing)
+        if (tutorialAudioSource != null)
+        {
+            tutorialAudioSource.Stop();
+        }
+
         // Stop speaking
         if (tutorialAnimator != null && !string.IsNullOrEmpty(speakAnimationParameter))
         {
@@ -246,14 +334,11 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
-        // Wait longer to ensure speak animation fully stops before starting turn left
         yield return new WaitForSeconds(8f);
 
         // === STEP 4: TURN LEFT ===
-        // Make absolutely sure walk is OFF and only turn left is active
         if (tutorialAnimator != null)
         {
-            // Turn off ALL other animations first
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == walkAnimationParameter))
             {
                 tutorialAnimator.SetBool(walkAnimationParameter, false);
@@ -269,19 +354,12 @@ public partial class Makedecision : MonoBehaviour
             
             yield return new WaitForSeconds(0.2f);
             
-            // Now activate turn left
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == turnLeftAnimationParameter))
             {
-                Debug.Log("[Tutorial] Triggering turn left animation");
                 tutorialAnimator.SetBool(turnLeftAnimationParameter, true);
-            }
-            else
-            {
-                Debug.LogWarning($"[Tutorial] Turn left parameter '{turnLeftAnimationParameter}' not found!");
             }
         }
         
-        // Wait for turn animation duration (adjust this to match your animation length)
         yield return new WaitForSeconds(2.0f);
         
         if (tutorialAnimator != null && !string.IsNullOrEmpty(turnLeftAnimationParameter))
@@ -289,7 +367,6 @@ public partial class Makedecision : MonoBehaviour
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == turnLeftAnimationParameter))
             {
                 tutorialAnimator.SetBool(turnLeftAnimationParameter, false);
-                Debug.Log($"[Tutorial] Turn left complete. Rotation: {tutorialGuy.transform.rotation.eulerAngles}");
             }
         }
         
@@ -304,12 +381,24 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
-        // Walk in the NEW direction (after turning left)
+        // Start playing footstep sound again (looping for walking)
+        if (tutorialAudioSource != null && footstepSound != null)
+        {
+            tutorialAudioSource.loop = true;
+            tutorialAudioSource.clip = footstepSound;
+            tutorialAudioSource.volume = tutorialFootstepVolume;
+            tutorialAudioSource.Play();
+        }
+
         Vector3 exitDirection = tutorialGuy.transform.forward;
         
         yield return StartCoroutine(MoveTutorialCharacterPositionOnly(tutorialGuy, exitDirection, walkDistance, tutorialMoveDuration));
 
-        // Stop walking
+        if (tutorialAudioSource != null)
+        {
+            tutorialAudioSource.Stop();
+        }
+
         if (tutorialAnimator != null && !string.IsNullOrEmpty(walkAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == walkAnimationParameter))
@@ -324,7 +413,7 @@ public partial class Makedecision : MonoBehaviour
         isTutorialActive = false;
 
         yield return new WaitForSeconds(0.5f);
-        StartCoroutine(character_mov.MoveToJudgmentPosition(characterQueue, isProcessingDecision, judgmentPoint, godGuidanceRevealed, revealedGuiltStatus, this));
+        StartCoroutine(character_mov.MoveToJudgmentPosition(characterQueue, isProcessingDecision, judgmentPoint, godGuidanceRevealed, revealedGuiltStatus, this, characterWalkSound, characterWalkVolume));
     }
 
     private IEnumerator MoveTutorialCharacterPositionOnly(GameObject tutorialGuy, Vector3 direction, float distance, float duration)
@@ -337,7 +426,6 @@ public partial class Makedecision : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            // Only interpolate position, never touch rotation
             float t = Mathf.Clamp01(elapsed / duration);
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
@@ -347,20 +435,16 @@ public partial class Makedecision : MonoBehaviour
             yield return null;
         }
 
-        // Ensure final position is exact
         character.position = targetPosition;
     }
 
     private IEnumerator WaitForAnimationState(Animator animator, float normalizedTime)
     {
-        // Wait a couple frames for animation to start
         yield return null;
         yield return null;
 
-        // Get current state info
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         
-        // Wait until animation reaches the specified normalized time
         while (stateInfo.normalizedTime < normalizedTime || animator.IsInTransition(0))
         {
             yield return null;
@@ -385,29 +469,31 @@ public partial class Makedecision : MonoBehaviour
     {
         isProcessingDecision = true;
 
-        // Hide all tooltips when making a decision
         ui.HideAllTooltips();
 
-        // Handle Ask God For Guidance special case
+        // Handle Ask God For Guidance special case - PLAY SOUND IMMEDIATELY
         if (decision == Decisions.DecisionType.AskGodForGuidance)
         {
+            // Play Ask God sound immediately when button is pressed
+            if (uiAudioSource != null && askGodForGuidanceSound != null)
+            {
+                uiAudioSource.PlayOneShot(askGodForGuidanceSound, decisionSoundVolume);
+            }
+            
             StartCoroutine(ProcessGodGuidance());
             return;
         }
 
         Decisions.ExecuteDecision(Characters.currentCharacter, decision);
 
-        // Check for endings immediately after executing decision
         if (GameState.Instance != null)
         {
             GameState.Instance.CheckForEndings();
 
-            // If game ended, stop all processing immediately
             if (GameState.Instance.gameEnded)
             {
                 isProcessingDecision = false;
 
-                // Hide UI panels before transitioning
                 if (ui.decisionPanel != null)
                     ui.decisionPanel.SetActive(false);
 
@@ -427,11 +513,9 @@ public partial class Makedecision : MonoBehaviour
         godGuidanceRevealed = true;
         revealedGuiltStatus = Characters.currentCharacter.isGuilty;
 
-        // Hide decision panel temporarily
         if (ui.decisionPanel != null)
             ui.decisionPanel.SetActive(false);
 
-        // Show God's answer in the post-decision panel
         if (ui.postDecisionPanel != null && ui.postDecisionText != null)
         {
             string godMessage = revealedGuiltStatus
@@ -442,28 +526,22 @@ public partial class Makedecision : MonoBehaviour
             ui.postDecisionPanel.SetActive(true);
         }
 
-        // Wait for player to read the message
         yield return new WaitForSeconds(3f);
 
-        // Hide the message
         if (ui.postDecisionPanel != null)
             ui.postDecisionPanel.SetActive(false);
 
-        // Update crime text to show guilt status
         if (ui.crimeText != null)
         {
             ui.crimeText.text = $"Crime: {Characters.currentCharacter.crime} [{(revealedGuiltStatus ? "GUILTY" : "INNOCENT")}]";
         }
 
-        // Execute the decision (affects stats)
         Decisions.ExecuteDecision(Characters.currentCharacter, Decisions.DecisionType.AskGodForGuidance);
 
-        // Check for endings immediately after executing decision
         if (GameState.Instance != null)
         {
             GameState.Instance.CheckForEndings();
 
-            // If game ended, stop processing
             if (GameState.Instance.gameEnded)
             {
                 isProcessingDecision = false;
@@ -471,11 +549,9 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
-        // Show decision panel again with updated options (without Ask God For Guidance)
         if (ui.decisionPanel != null)
             ui.decisionPanel.SetActive(true);
 
-        // Refresh the decision buttons to remove "Ask God For Guidance" and show remaining options
         ui.UpdateDecisionButtons();
 
         isProcessingDecision = false;
@@ -483,17 +559,15 @@ public partial class Makedecision : MonoBehaviour
 
     private bool IsGoodOutcome(Decisions.DecisionType decision, bool isGuilty)
     {
-        // Merciful/Positive decisions - ALWAYS good outcome (forgiveness is inherently positive)
         if (decision == Decisions.DecisionType.Forgive ||
             decision == Decisions.DecisionType.RedemptionQuest ||
             decision == Decisions.DecisionType.Corruption ||
             decision == Decisions.DecisionType.AcceptBribe||
             decision == Decisions.DecisionType.SpareWithWarning)
         {
-            return true; // Always celebrate mercy and forgiveness
+            return true;
         }
 
-        // Harsh/Immoral decisions - NEVER a good outcome (always sad)
         if (decision == Decisions.DecisionType.Execute ||
             decision == Decisions.DecisionType.Torture ||
             decision == Decisions.DecisionType.Imprison ||
@@ -505,19 +579,56 @@ public partial class Makedecision : MonoBehaviour
             decision == Decisions.DecisionType.BanishWilderness ||
             decision == Decisions.DecisionType.CollectivePunishment)
         {
-            return false; // Always sad - these are morally questionable
+            return false;
         }
 
-
-
-        // Ask God for Guidance - Neutral/Random
         if (decision == Decisions.DecisionType.AskGodForGuidance)
         {
-            return random.Next(2) == 0; // 50/50
+            return random.Next(2) == 0;
         }
 
-        // Default fallback
         return random.Next(2) == 0;
+    }
+
+    private AudioClip GetDecisionSound(Decisions.DecisionType decision)
+    {
+        switch (decision)
+        {
+            case Decisions.DecisionType.Execute:
+                return executeSound;
+            case Decisions.DecisionType.Exile:
+                return exileSound;
+            case Decisions.DecisionType.Forgive:
+                return forgiveSound;
+            case Decisions.DecisionType.Confiscate:
+                return confiscateSound;
+            case Decisions.DecisionType.Imprison:
+                return imprisonSound;
+            case Decisions.DecisionType.Torture:
+                return tortureSound;
+            case Decisions.DecisionType.TrialByOrdeal:
+                return trialByOrdealSound;
+            case Decisions.DecisionType.RedemptionQuest:
+                return redemptionQuestSound;
+            case Decisions.DecisionType.PublicHumiliation:
+                return publicHumiliationSound;
+            case Decisions.DecisionType.BanishWilderness:
+                return banishWildernessSound;
+            case Decisions.DecisionType.SpareWithWarning:
+                return spareWithWarningSound;
+            case Decisions.DecisionType.AcceptBribe:
+                return acceptBribeSound;
+            case Decisions.DecisionType.CollectivePunishment:
+                return collectivePunishmentSound;
+            case Decisions.DecisionType.SacrificeToGod:
+                return sacrificeToGodSound;
+            case Decisions.DecisionType.Corruption:
+                return corruptionSound;
+            case Decisions.DecisionType.AskGodForGuidance:
+                return null; // Handled separately when button is pressed
+            default:
+                return null;
+        }
     }
 
     public IEnumerator ProcessDecisionOutcome(bool isGoodOutcome, Decisions.DecisionType decision)
@@ -534,8 +645,22 @@ public partial class Makedecision : MonoBehaviour
 
         Transform characterOutcomePoint = isGoodOutcome ? pointGood : pointBad;
         
-        // Pass isGoodOutcome to MoveCharacterToOutcome
-        yield return StartCoroutine(character_mov.MoveCharacterToOutcome(characterOutcomePoint.position, judgmentPoint, isGoodOutcome));
+        // Get decision-specific sound
+        AudioClip decisionSound = GetDecisionSound(decision);
+        
+        // Pass all audio parameters including decision sound
+        yield return StartCoroutine(character_mov.MoveCharacterToOutcome(
+            characterOutcomePoint.position, 
+            judgmentPoint, 
+            isGoodOutcome, 
+            characterWalkSound,
+            characterWalkVolume,
+            characterCrySound, 
+            characterCelebrateSound,
+            characterEmotionVolume,
+            decisionSound,
+            decisionSoundVolume
+        ));
         
         yield return StartCoroutine(camera_mov.ReturnCameraToPlayer(playerCamera, originalCameraPosition, originalCameraRotation));
 
@@ -546,19 +671,24 @@ public partial class Makedecision : MonoBehaviour
         }
 
         character_mov.SpawnCharacterInQueue(queueSize - 1, spawnPoint, characterPrefab, characterQueue, spacing);
-        yield return StartCoroutine(character_mov.MoveQueueForward(characterQueue, spawnPoint, spacing));
+        yield return StartCoroutine(character_mov.MoveQueueForward(characterQueue, spawnPoint, spacing, characterWalkSound, characterWalkVolume));
 
-        // Reset god guidance flag for new character
         godGuidanceRevealed = false;
         revealedGuiltStatus = false;
 
         isProcessingDecision = false;
         yield return new WaitForSeconds(1f);
-        StartCoroutine(character_mov.MoveToJudgmentPosition(characterQueue, isProcessingDecision, judgmentPoint, godGuidanceRevealed, revealedGuiltStatus, this));
+        StartCoroutine(character_mov.MoveToJudgmentPosition(characterQueue, isProcessingDecision, judgmentPoint, godGuidanceRevealed, revealedGuiltStatus, this, characterWalkSound, characterWalkVolume));
     }
 
     public void ShowDecision()
     {
+        // Play decision canvas appear sound
+        if (uiAudioSource != null && decisionCanvasAppearSound != null)
+        {
+            uiAudioSource.PlayOneShot(decisionCanvasAppearSound, uiSoundVolume);
+        }
+        
         ui.ShowDecision();
     }
 }
