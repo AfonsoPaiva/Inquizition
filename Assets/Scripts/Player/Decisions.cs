@@ -29,6 +29,7 @@ public partial class Makedecision
             RedemptionQuest,
             PublicHumiliation,
             BanishWilderness,
+            AcceptBribe,
             // New context-dependent decisions
             SpareWithWarning,
             CollectivePunishment,
@@ -51,6 +52,7 @@ public partial class Makedecision
             DecisionType.PublicHumiliation,
             DecisionType.BanishWilderness,
             DecisionType.SpareWithWarning,
+            DecisionType.AcceptBribe,
             DecisionType.CollectivePunishment,
             DecisionType.SacrificeToGod,
             DecisionType.Corruption,
@@ -159,22 +161,22 @@ public partial class Makedecision
         {
             switch (decisionType)
             {
-                case DecisionType.Execute: return "EXECUTE";
-                case DecisionType.Exile: return "EXILE";
-                case DecisionType.Forgive: return "FORGIVE";
-                case DecisionType.Confiscate: return "CONFISCATE";
-                case DecisionType.Imprison: return "IMPRISON";
-                case DecisionType.Torture: return "TORTURE";
-                case DecisionType.TrialByOrdeal: return "TRIAL BY ORDEAL";
-                case DecisionType.RedemptionQuest: return "REDEMPTION QUEST";
-                case DecisionType.PublicHumiliation: return "PUBLIC HUMILIATION";
-                case DecisionType.BanishWilderness: return "BANISH TO WILDERNESS";
+                case DecisionType.Execute: return "Execute";
+                case DecisionType.Exile: return "Exile";
+                case DecisionType.Forgive: return "Forgive";
+                case DecisionType.Confiscate: return "Confiscate";
+                case DecisionType.Imprison: return "Imprison";
+                case DecisionType.Torture: return "Torture";
+                case DecisionType.TrialByOrdeal: return "Trial By Order";
+                case DecisionType.RedemptionQuest: return "Redemption Quest";
+                case DecisionType.PublicHumiliation: return "Public humiliation";
+                case DecisionType.BanishWilderness: return "Banish To Wilderness";
                 // New decisions
-                case DecisionType.SpareWithWarning: return "SPARE (WITH WARNING)";
-                case DecisionType.CollectivePunishment: return "COLLECTIVE PUNISHMENT";
-                case DecisionType.SacrificeToGod: return "SACRIFICE TO GOD";
-                case DecisionType.Corruption: return "ACCEPT BRIBE";
-                case DecisionType.AskGodForGuidance: return "ASK GOD FOR GUIDANCE";
+                case DecisionType.SpareWithWarning: return "Spare (With Warning)";
+                case DecisionType.CollectivePunishment: return "Collective Punisment";
+                case DecisionType.SacrificeToGod: return "Sacrifice To God";
+                case DecisionType.Corruption: return "Accept Bribe";
+                case DecisionType.AskGodForGuidance: return "Ask God for Guidence";
                 default: return decisionType.ToString();
             }
         }

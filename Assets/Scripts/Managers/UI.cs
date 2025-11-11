@@ -10,7 +10,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static Makedecision;
-using static UnityEditor.ShaderGraph.Internal.KeywordDependentCollection;
 
 
 namespace Assets.Scripts.Managers
@@ -30,19 +29,37 @@ namespace Assets.Scripts.Managers
         public TextMeshProUGUI characterNameText;
         public TextMeshProUGUI crimeText;
         public TextMeshProUGUI descriptionText;
-        public TextMeshProUGUI statsText;
         public TextMeshProUGUI postDecisionText;
         public GameObject postDecisionPanel;
         public GameObject storePanel;
 
+        [Header("Stat Bars (assign Image components)")]
+        public Image populationBar;      
+        public Image fearBar;           
+        public Image divineFavorBar;  
+        public Image karmaBar;         
+       
+        [Header("Gold Number (assign TextMeshProUGUI)")]
+        public TextMeshProUGUI goldText;
 
+        [Header("Bar smoothing (seconds to reach target)")]
+        [Tooltip("Time (in seconds) it takes the bar to reach the target value. 0 = instant.")]
+        public float barLerpDuration = 3f;
+
+        // internal smoothing state
+        private float targetPopulationFill;
+        private float targetFearFill;
+        private float targetDivineFavorFill;
+        private float targetKarmaFill;
+
+        private float currentPopulationFill;
+        private float currentFearFill;
+        private float currentDivineFavorFill;
+        private float currentKarmaFill;
 
         [Header("Tooltip Text References")]
-        public TextMeshProUGUI tooltipTitle1;
         public TextMeshProUGUI tooltipEffects1;
-        public TextMeshProUGUI tooltipTitle2;
         public TextMeshProUGUI tooltipEffects2;
-        public TextMeshProUGUI tooltipTitle3;
         public TextMeshProUGUI tooltipEffects3;
 
         [Header("Tooltip Panels - One for each button")]
@@ -65,15 +82,27 @@ namespace Assets.Scripts.Managers
         public Button buyPopulationButton;
         public Button buyDivineFavorButton;
         public Button buyKarmaButton;
+        public Button toggleStoreButton;
         public TextMeshProUGUI storeMessageText;
+
+        [Header("Store Animation Settings")]
+        [Tooltip("Duration of the slide animation in seconds")]
+        public float slideAnimationDuration = 0.3f;
 
         private List<Button> decisionButtons;
         private List<TextMeshProUGUI> decisionTexts;
 
         private Dictionary<Button, GameObject> buttonToTooltipMap = new Dictionary<Button, GameObject>();
-        private Dictionary<Button, (TextMeshProUGUI title, TextMeshProUGUI effects)> buttonToTextMap = new Dictionary<Button, (TextMeshProUGUI, TextMeshProUGUI)>();
-        
+        private Dictionary<Button, TextMeshProUGUI> buttonToTextMap = new Dictionary<Button, TextMeshProUGUI>();
+
         public static UI Instance { get; private set; }
+
+        // Store panel animation state
+        private bool isStoreOpen = false;
+        private bool isAnimating = false;
+        private RectTransform storePanelRect;
+        private Vector2 hiddenPosition;
+        private Vector2 visiblePosition;
 
         void Awake() { Instance = this; }
 
@@ -89,12 +118,35 @@ namespace Assets.Scripts.Managers
         {
             InitializeTooltipSystem();
 
+            // initialize current fill values (so the first frame won't jump)
+            if (populationBar != null) currentPopulationFill = populationBar.fillAmount;
+            if (fearBar != null) currentFearFill = fearBar.fillAmount;
+            if (divineFavorBar != null) currentDivineFavorFill = divineFavorBar.fillAmount;
+            if (karmaBar != null) currentKarmaFill = karmaBar.fillAmount;
 
             if (postDecisionPanel != null)
                 postDecisionPanel.SetActive(false);
 
+            // Initialize store panel position
             if (storePanel != null)
-                storePanel.SetActive(false);
+            {
+                storePanel.SetActive(true); // Must be active to get RectTransform
+                storePanelRect = storePanel.GetComponent<RectTransform>();
+                
+                if (storePanelRect != null)
+                {
+                    // Store the visible position (current position)
+                    visiblePosition = storePanelRect.anchoredPosition;
+
+                    // Calculate hidden position (off-screen to the left)
+                    hiddenPosition = new Vector2(visiblePosition.x - storePanelRect.rect.width - 200, visiblePosition.y);
+
+                    // Start hidden
+                    storePanelRect.anchoredPosition = hiddenPosition;
+                }
+                
+                isStoreOpen = false;
+            }
 
 
             decisionButtons = new List<Button> { decisionButton1, decisionButton2, decisionButton3 };
@@ -123,6 +175,23 @@ namespace Assets.Scripts.Managers
             {
                 buyKarmaButton.onClick.AddListener(() => BuyStoreItem(StoreItemType.Karma));
             }
+
+            // Initialize toggle store button
+            if (toggleStoreButton != null)
+            {
+                toggleStoreButton.onClick.AddListener(ToggleStore);
+            }
+        }
+
+        void Update()
+        {
+            UpdateStatsUI();
+
+            // Press 'B' to open/close store (like "Buy")
+            if (Input.GetKeyDown(KeyCode.B) && !makedecision.isProcessingDecision && !isAnimating)
+            {
+                ToggleStore();
+            }
         }
 
         public void UpdateTooltipContent(Button button, Decisions.DecisionType decisionType)
@@ -132,21 +201,13 @@ namespace Assets.Scripts.Managers
                 return;
             }
 
-            var (titleText, effectsText) = buttonToTextMap[button];
-
-            if (titleText != null)
-            {
-                string title = Decisions.GetDecisionDisplayName(decisionType);
-                titleText.text = title;
-            }
-
+            var effectsText = buttonToTextMap[button];
 
             if (effectsText != null && makedecision.decisionEffectsCache.ContainsKey(decisionType))
             {
                 string effects = makedecision.decisionEffectsCache[decisionType];
                 effectsText.text = effects;
             }
-
         }
 
         private void BuyStoreItem(StoreItemType itemType)
@@ -166,7 +227,7 @@ namespace Assets.Scripts.Managers
                     break;
                 case StoreItemType.DivineFavor:
                     cost = 25;
-                    amount = 20;
+                    amount = 15;
                     message = "Made offerings to the gods";
                     break;
                 case StoreItemType.Karma:
@@ -195,11 +256,17 @@ namespace Assets.Scripts.Managers
 
                 GameState.Instance.currentStats.ClampValues();
 
+                // CRITICAL: Check for endings immediately after buying items
+                GameState.Instance.CheckForEndings();
 
-                if (storeMessageText != null)
+                // Only show success message if game didn't end
+                if (!GameState.Instance.gameEnded)
                 {
-                    storeMessageText.text = $"Purchase successful! {message}";
-                    StartCoroutine(ClearStoreMessage());
+                    if (storeMessageText != null)
+                    {
+                        storeMessageText.text = $"Purchase successful! {message}";
+                        StartCoroutine(ClearStoreMessage());
+                    }
                 }
             }
             else
@@ -224,21 +291,21 @@ namespace Assets.Scripts.Managers
             if (decisionButton1 != null && tooltipPanel1 != null)
             {
                 buttonToTooltipMap[decisionButton1] = tooltipPanel1;
-                buttonToTextMap[decisionButton1] = (tooltipTitle1, tooltipEffects1);
+                buttonToTextMap[decisionButton1] = tooltipEffects1;
                 SetupButtonHoverEvents(decisionButton1, tooltipPanel1);
             }
 
             if (decisionButton2 != null && tooltipPanel2 != null)
             {
                 buttonToTooltipMap[decisionButton2] = tooltipPanel2;
-                buttonToTextMap[decisionButton2] = (tooltipTitle2, tooltipEffects2);
+                buttonToTextMap[decisionButton2] = tooltipEffects2;
                 SetupButtonHoverEvents(decisionButton2, tooltipPanel2);
             }
 
             if (decisionButton3 != null && tooltipPanel3 != null)
             {
                 buttonToTooltipMap[decisionButton3] = tooltipPanel3;
-                buttonToTextMap[decisionButton3] = (tooltipTitle3, tooltipEffects3);
+                buttonToTextMap[decisionButton3] = tooltipEffects3;
                 SetupButtonHoverEvents(decisionButton3, tooltipPanel3);
             }
 
@@ -366,24 +433,38 @@ namespace Assets.Scripts.Managers
             }
         }
 
-        private void ToggleStore(GameObject storePanel)
+        public void ToggleStore()
         {
-            if (storePanel != null)
-            {
-                bool newState = !storePanel.activeSelf;
-                storePanel.SetActive(newState);
+            if (storePanel == null || storePanelRect == null || isAnimating) return;
 
-                if (newState)
-                {
-
-                    HideDecision();
-                }
-                else
-                {
-                    ShowDecision();
-                }
-            }
+            StartCoroutine(AnimateStorePanel(!isStoreOpen));
         }
+
+        private IEnumerator AnimateStorePanel(bool open)
+        {
+            isAnimating = true;
+
+            Vector2 startPos = storePanelRect.anchoredPosition;
+            Vector2 targetPos = open ? visiblePosition : hiddenPosition;
+
+            float elapsed = 0f;
+
+            while (elapsed < slideAnimationDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / slideAnimationDuration);
+                storePanelRect.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+                yield return null;
+            }
+
+            storePanelRect.anchoredPosition = targetPos;
+            isStoreOpen = open;
+            isAnimating = false;
+
+        
+        }
+
+        
 
         public void ShowDecision()
         {
@@ -413,8 +494,7 @@ namespace Assets.Scripts.Managers
             if (decisionPanel != null)
                 decisionPanel.SetActive(true);
 
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+ 
         }
 
         public static void ShowPostDecisionDialogue(Decisions.DecisionType decision)
@@ -483,8 +563,11 @@ namespace Assets.Scripts.Managers
             if (postDecisionPanel != null)
                 postDecisionPanel.SetActive(false);
 
-            if (storePanel != null)
-                storePanel.SetActive(false);
+            // Close store when hiding decisions
+            if (isStoreOpen && !isAnimating)
+            {
+                StartCoroutine(AnimateStorePanel(false));
+            }
 
             // Hide all tooltips when hiding decision
             HideAllTooltips();
@@ -492,8 +575,7 @@ namespace Assets.Scripts.Managers
             if (playerCamera != null)
                 playerCamera.EnableLook();
 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            
         }
 
         public void HideAllTooltips()
@@ -501,7 +583,7 @@ namespace Assets.Scripts.Managers
             if (tooltipPanel1 != null)
             {
                 tooltipPanel1.SetActive(false);
-            }
+            }   
             if (tooltipPanel2 != null)
             {
                 tooltipPanel2.SetActive(false);
@@ -515,21 +597,58 @@ namespace Assets.Scripts.Managers
 
         private void UpdateStatsUI()
         {
-            if (statsText != null && GameState.Instance != null)
-            {
-                GameState stats = GameState.Instance;
-                statsText.text = $"Population: {stats.currentStats.population}\n" +
-                               $"Fear: {stats.currentStats.fear}\n" +
-                               $"Divine Favor: {stats.currentStats.divineFavor}\n" +
-                               $"Karma: {stats.currentStats.karma}\n" +
-                               $"Gold: {stats.currentStats.gold}";
-            }
-        }
+            if (GameState.Instance == null) return;
 
-        private void Update()
-        {
-            UpdateStatsUI();
+            GameState stats = GameState.Instance;
+
+            // Use bars for the four clamped stats; gold remains a numeric Text.
+            bool usingBars = populationBar != null || fearBar != null || divineFavorBar != null || karmaBar != null;
+
+            if (usingBars)
+            {
+
+                // calculate targets (values clamped 0..100 in GameState)
+                targetPopulationFill = populationBar != null ? Mathf.Clamp01(stats.currentStats.population / 100f) : 0f;
+                targetFearFill = fearBar != null ? Mathf.Clamp01(stats.currentStats.fear / 100f) : 0f;
+                targetDivineFavorFill = divineFavorBar != null ? Mathf.Clamp01(stats.currentStats.divineFavor / 100f) : 0f;
+                targetKarmaFill = karmaBar != null ? Mathf.Clamp01(stats.currentStats.karma / 100f) : 0f;
+
+                // animate current fills towards targets
+                float step = barLerpDuration <= 0f ? 1f : (Time.deltaTime / Mathf.Max(0.00001f, barLerpDuration));
+
+                if (populationBar != null)
+                {
+                    currentPopulationFill = Mathf.MoveTowards(currentPopulationFill, targetPopulationFill, step);
+                    populationBar.fillAmount = currentPopulationFill;
+                }
+
+                if (fearBar != null)
+                {
+                    currentFearFill = Mathf.MoveTowards(currentFearFill, targetFearFill, step);
+                    fearBar.fillAmount = currentFearFill;
+                }
+
+                if (divineFavorBar != null)
+                {
+                    currentDivineFavorFill = Mathf.MoveTowards(currentDivineFavorFill, targetDivineFavorFill, step);
+                    divineFavorBar.fillAmount = currentDivineFavorFill;
+                }
+
+                if (karmaBar != null)
+                {
+                    currentKarmaFill = Mathf.MoveTowards(currentKarmaFill, targetKarmaFill, step);
+                    karmaBar.fillAmount = currentKarmaFill;
+                }
+
+                // Update gold as number
+                if (goldText != null)
+                {
+                    goldText.gameObject.SetActive(true);
+                    goldText.text = $"{stats.currentStats.gold}";
+                }
+            }
         }
 
     }
 }
+
