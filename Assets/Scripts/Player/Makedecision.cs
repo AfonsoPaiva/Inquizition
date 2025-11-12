@@ -99,37 +99,29 @@ public partial class Makedecision : MonoBehaviour
         ui = UI.Instance;
 
         Decisions.InitializeDecisions();
-
-        // Create AudioSource for UI sounds
         uiAudioSource = gameObject.AddComponent<AudioSource>();
         uiAudioSource.playOnAwake = false;
         uiAudioSource.spatialBlend = 0f; // 2D sound
 
-        // Ensure cursor is visible and unlocked for UI interaction
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
         if (playerCamera != null)
         {
-            // Store WORLD position and rotation (not local)
             originalCameraPosition = playerCamera.transform.position;
             originalCameraRotation = playerCamera.transform.rotation;
             originalCameraParent = playerCamera.transform.parent;
         }
 
-        // Create initial queue
         for (int i = 0; i < queueSize; i++)
         {
             character_mov.SpawnCharacterInQueue(i, spawnPoint, characterPrefab, characterQueue, spacing);
         }
 
-        // Check if tutorial has been shown in this session (NOT persistent across game restarts)
         bool tutorialShownThisSession = PlayerPrefs.GetInt("TutorialShownThisSession", 0) == 1;
 
-        // Start tutorial or regular game
         if (isTutorialActive && !tutorialShownThisSession)
         {
-            // Mark tutorial as shown for this session
             PlayerPrefs.SetInt("TutorialShownThisSession", 1);
             PlayerPrefs.Save();
             StartCoroutine(PlayTutorialSequence());
@@ -142,7 +134,6 @@ public partial class Makedecision : MonoBehaviour
 
     void Update()
     {
-        // Ensure cursor stays visible and unlocked (in case something else tries to lock it)
         if (Cursor.lockState != CursorLockMode.None)
         {
             Cursor.lockState = CursorLockMode.None;
@@ -155,11 +146,9 @@ public partial class Makedecision : MonoBehaviour
 
     private IEnumerator PlayTutorialSequence()
     {
-        // Ensure cursor is visible for tutorial
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // 1. Spawn tutorial character at spawn point
         if (tutorialPrefab == null || tutorialGuySpawn == null)
         {
             Debug.LogError("Tutorial Prefab or Tutorial Guy Spawn is not assigned!");
@@ -169,7 +158,6 @@ public partial class Makedecision : MonoBehaviour
 
         GameObject tutorialGuy = Instantiate(tutorialPrefab, tutorialGuySpawn.position, tutorialGuySpawn.rotation);
 
-        // Get Animator component
         Animator tutorialAnimator = tutorialGuy.GetComponent<Animator>();
 
         if (tutorialAnimator == null)
@@ -178,39 +166,32 @@ public partial class Makedecision : MonoBehaviour
             yield break;
         }
 
-        // Get or add AudioSource component
         AudioSource tutorialAudioSource = tutorialGuy.GetComponent<AudioSource>();
         if (tutorialAudioSource == null)
         {
             tutorialAudioSource = tutorialGuy.AddComponent<AudioSource>();
         }
         
-        // Configure AudioSource
         tutorialAudioSource.loop = true;
         tutorialAudioSource.playOnAwake = false;
-        tutorialAudioSource.spatialBlend = 1f; // 3D sound
+        tutorialAudioSource.spatialBlend = 1f; 
         tutorialAudioSource.maxDistance = 50f;
         
-        // Enable root motion so animation controls rotation
         tutorialAnimator.applyRootMotion = true;
 
-        // Disable character_mov component if it exists
         character_mov tutorialCharMov = tutorialGuy.GetComponent<character_mov>();
         if (tutorialCharMov != null)
         {
             tutorialCharMov.enabled = false;
         }
 
-        // Small delay to ensure character is fully spawned
         yield return new WaitForSeconds(0.2f);
 
-        // 2. Camera focuses on the spawned tutorial character
         if (playerCamera != null && tutorialGuy != null)
         {
             yield return StartCoroutine(playerCamera.LookAtTransform(tutorialGuy.transform, 1.0f));
         }
 
-        // === STEP 1: WALK FORWARD ===
         if (tutorialAnimator != null && !string.IsNullOrWhiteSpace(walkAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == walkAnimationParameter))
@@ -219,7 +200,6 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
-        // Start playing footstep sound (continuous loop)
         if (tutorialAudioSource != null && footstepSound != null)
         {
             tutorialAudioSource.loop = true;
@@ -233,13 +213,11 @@ public partial class Makedecision : MonoBehaviour
         
         yield return StartCoroutine(MoveTutorialCharacterPositionOnly(tutorialGuy, walkDirection, walkDistance, tutorialMoveDuration));
 
-        // Stop footstep sound
         if (tutorialAudioSource != null)
         {
             tutorialAudioSource.Stop();
         }
 
-        // Stop walking
         if (tutorialAnimator != null && !string.IsNullOrWhiteSpace(walkAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == walkAnimationParameter))
@@ -250,7 +228,6 @@ public partial class Makedecision : MonoBehaviour
         
         yield return new WaitForSeconds(0.5f);
 
-        // === STEP 2: TURN RIGHT ===
         if (tutorialAnimator != null && !string.IsNullOrEmpty(turnRightAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == turnRightAnimationParameter))
@@ -271,7 +248,6 @@ public partial class Makedecision : MonoBehaviour
         
         yield return new WaitForSeconds(0.5f);
 
-        // === STEP 3: TALK ===
         if (tutorialAnimator != null && !string.IsNullOrEmpty(speakAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == speakAnimationParameter))
@@ -280,14 +256,12 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
-        // Play speaking sound as ONE-SHOT (not looping)
         if (tutorialAudioSource != null && tutorialSpeakingSound != null)
         {
             tutorialAudioSource.loop = false;
             tutorialAudioSource.PlayOneShot(tutorialSpeakingSound, tutorialSpeakingVolume);
         }
 
-        // Camera focuses on tutorial character's upper body/head for speaking
         if (playerCamera != null && tutorialGuy != null)
         {
             GameObject tempTarget = new GameObject("TempCameraTarget");
@@ -300,7 +274,6 @@ public partial class Makedecision : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        // Display message panel and wait for spacebar
         if (tutorialMessagePanel != null)
         {
             tutorialMessagePanel.SetActive(true);
@@ -319,13 +292,11 @@ public partial class Makedecision : MonoBehaviour
             tutorialMessagePanel.SetActive(false);
         }
 
-        // Stop speaking sound (if still playing)
         if (tutorialAudioSource != null)
         {
             tutorialAudioSource.Stop();
         }
 
-        // Stop speaking
         if (tutorialAnimator != null && !string.IsNullOrEmpty(speakAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == speakAnimationParameter))
@@ -336,7 +307,6 @@ public partial class Makedecision : MonoBehaviour
 
         yield return new WaitForSeconds(8f);
 
-        // === STEP 4: TURN LEFT ===
         if (tutorialAnimator != null)
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == walkAnimationParameter))
@@ -372,7 +342,6 @@ public partial class Makedecision : MonoBehaviour
         
         yield return new WaitForSeconds(0.5f);
 
-        // === STEP 5: WALK FORWARD (in new direction) ===
         if (tutorialAnimator != null && !string.IsNullOrEmpty(walkAnimationParameter))
         {
             if (System.Array.Exists(tutorialAnimator.parameters, p => p.name == walkAnimationParameter))
@@ -381,7 +350,6 @@ public partial class Makedecision : MonoBehaviour
             }
         }
 
-        // Start playing footstep sound again (looping for walking)
         if (tutorialAudioSource != null && footstepSound != null)
         {
             tutorialAudioSource.loop = true;
@@ -471,7 +439,6 @@ public partial class Makedecision : MonoBehaviour
 
         ui.HideAllTooltips();
 
-        // Handle Ask God For Guidance special case - PLAY SOUND IMMEDIATELY
         if (decision == Decisions.DecisionType.AskGodForGuidance)
         {
             // Play Ask God sound immediately when button is pressed
@@ -625,7 +592,7 @@ public partial class Makedecision : MonoBehaviour
             case Decisions.DecisionType.Corruption:
                 return corruptionSound;
             case Decisions.DecisionType.AskGodForGuidance:
-                return null; // Handled separately when button is pressed
+                return null; 
             default:
                 return null;
         }
@@ -645,10 +612,8 @@ public partial class Makedecision : MonoBehaviour
 
         Transform characterOutcomePoint = isGoodOutcome ? pointGood : pointBad;
         
-        // Get decision-specific sound
         AudioClip decisionSound = GetDecisionSound(decision);
         
-        // Pass all audio parameters including decision sound
         yield return StartCoroutine(character_mov.MoveCharacterToOutcome(
             characterOutcomePoint.position, 
             judgmentPoint, 
@@ -683,8 +648,7 @@ public partial class Makedecision : MonoBehaviour
 
     public void ShowDecision()
     {
-        // Play decision canvas appear sound
-        if (uiAudioSource != null && decisionCanvasAppearSound != null)
+       if (uiAudioSource != null && decisionCanvasAppearSound != null)
         {
             uiAudioSource.PlayOneShot(decisionCanvasAppearSound, uiSoundVolume);
         }

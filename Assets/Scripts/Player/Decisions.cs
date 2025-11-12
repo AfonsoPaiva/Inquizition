@@ -30,7 +30,6 @@ public partial class Makedecision
             PublicHumiliation,
             BanishWilderness,
             AcceptBribe,
-            // New context-dependent decisions
             SpareWithWarning,
             CollectivePunishment,
             SacrificeToGod,
@@ -59,7 +58,7 @@ public partial class Makedecision
             DecisionType.AskGodForGuidance
         };
 
-        // Current active decisions for the buttons
+        //active decisions for the buttons
         private static List<DecisionType> currentActiveDecisions = new List<DecisionType>();
 
         public static void InitializeDecisions()
@@ -72,11 +71,8 @@ public partial class Makedecision
         {
             currentActiveDecisions.Clear();
 
-            // Create a pool of ALL available decisions
+            // ALL available decisions
             List<DecisionType> availablePool = new List<DecisionType>(allDecisions);
-
-            // Add context-dependent decisions if conditions are met FIRST
-            // This ensures they have priority in the random selection
             List<DecisionType> contextDecisions = new List<DecisionType>();
 
             if (currentCharacter != null && gameState != null)
@@ -124,30 +120,21 @@ public partial class Makedecision
                 }
             }
 
-            // Add context decisions first (they're guaranteed to appear if conditions are met)
             currentActiveDecisions.AddRange(contextDecisions);
-
-            // Shuffle the remaining pool
             availablePool = availablePool.OrderBy(x => random.Next()).ToList();
-
-            // Calculate how many more decisions we need to reach 3 total
             int decisionsNeeded = 3 - currentActiveDecisions.Count;
 
-            // Add random decisions from the available pool
             for (int i = 0; i < decisionsNeeded && availablePool.Count > 0; i++)
             {
                 currentActiveDecisions.Add(availablePool[0]);
                 availablePool.RemoveAt(0);
             }
 
-            // If we still don't have 3 decisions (edge case), add any remaining
             while (currentActiveDecisions.Count < 3 && availablePool.Count > 0)
             {
                 currentActiveDecisions.Add(availablePool[0]);
                 availablePool.RemoveAt(0);
             }
-
-            // Final shuffle to randomize button positions
             currentActiveDecisions = currentActiveDecisions.OrderBy(x => random.Next()).ToList();
 
         }
@@ -171,7 +158,6 @@ public partial class Makedecision
                 case DecisionType.RedemptionQuest: return "Redemption Quest";
                 case DecisionType.PublicHumiliation: return "Public humiliation";
                 case DecisionType.BanishWilderness: return "Banish To Wilderness";
-                // New decisions
                 case DecisionType.SpareWithWarning: return "Spare (With Warning)";
                 case DecisionType.CollectivePunishment: return "Collective Punisment";
                 case DecisionType.SacrificeToGod: return "Sacrifice To God";
@@ -195,7 +181,6 @@ public partial class Makedecision
                 case DecisionType.RedemptionQuest: return "Send on holy mission";
                 case DecisionType.PublicHumiliation: return "Shame publicly";
                 case DecisionType.BanishWilderness: return "Exile to cursed lands";
-                // New decisions
                 case DecisionType.SpareWithWarning: return "Show mercy to first-time offenders";
                 case DecisionType.CollectivePunishment: return "Punish entire group for conspiracy";
                 case DecisionType.SacrificeToGod: return "Desperate measure to regain divine favor";

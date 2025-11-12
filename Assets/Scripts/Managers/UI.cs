@@ -73,6 +73,12 @@ namespace Assets.Scripts.Managers
         public GameObject tooltipPanel2;
         public GameObject tooltipPanel3;
 
+        [Header("Bar Tooltip Prefabs - One for each bar")]
+        public GameObject populationBarTooltipPrefab;
+        public GameObject fearBarTooltipPrefab;
+        public GameObject divineFavorBarTooltipPrefab;
+        public GameObject karmaBarTooltipPrefab;
+
         [Header("Button References")]
         public Button decisionButton1;
         public Button decisionButton2;
@@ -126,8 +132,8 @@ namespace Assets.Scripts.Managers
         void Start()
         {
             InitializeTooltipSystem();
+            InitializeBarTooltips();
 
-            // initialize current fill values (so the first frame won't jump)
             if (populationBar != null) currentPopulationFill = populationBar.fillAmount;
             if (fearBar != null) currentFearFill = fearBar.fillAmount;
             if (divineFavorBar != null) currentDivineFavorFill = divineFavorBar.fillAmount;
@@ -136,11 +142,9 @@ namespace Assets.Scripts.Managers
             if (postDecisionPanel != null)
                 postDecisionPanel.SetActive(false);
 
-            // Initialize pause menu
             if (pauseMenuPanel != null)
                 pauseMenuPanel.SetActive(false);
 
-            // Setup pause menu buttons
             if (continueButton != null)
             {
                 continueButton.onClick.AddListener(ResumeGame);
@@ -151,21 +155,18 @@ namespace Assets.Scripts.Managers
                 mainMenuButton.onClick.AddListener(LoadMainMenu);
             }
 
-            // Initialize store panel position
             if (storePanel != null)
             {
-                storePanel.SetActive(true); // Must be active to get RectTransform
+                storePanel.SetActive(true); 
                 storePanelRect = storePanel.GetComponent<RectTransform>();
                 
                 if (storePanelRect != null)
                 {
-                    // Store the visible position (current position)
                     visiblePosition = storePanelRect.anchoredPosition;
 
-                    // Calculate hidden position (off-screen to the left)
                     hiddenPosition = new Vector2(visiblePosition.x - storePanelRect.rect.width - 200, visiblePosition.y);
 
-                    // Start hidden
+                    // it starts hidden 
                     storePanelRect.anchoredPosition = hiddenPosition;
                 }
                 
@@ -185,8 +186,6 @@ namespace Assets.Scripts.Managers
                 }
             }
 
-
-            // Initialize store item buttons
             if (buyPopulationButton != null)
             {
                 buyPopulationButton.onClick.AddListener(() => BuyStoreItem(StoreItemType.Population));
@@ -200,7 +199,6 @@ namespace Assets.Scripts.Managers
                 buyKarmaButton.onClick.AddListener(() => BuyStoreItem(StoreItemType.Karma));
             }
 
-            // Initialize toggle store button
             if (toggleStoreButton != null)
             {
                 toggleStoreButton.onClick.AddListener(ToggleStore);
@@ -210,14 +208,6 @@ namespace Assets.Scripts.Managers
         void Update()
         {
             UpdateStatsUI();
-
-            // Press 'B' to open/close store (like "Buy")
-            if (Input.GetKeyDown(KeyCode.B) && !makedecision.isProcessingDecision && !isAnimating && !isPaused)
-            {
-                ToggleStore();
-            }
-
-            // Press ESC to toggle pause menu
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (isPaused)
@@ -231,10 +221,72 @@ namespace Assets.Scripts.Managers
             }
         }
 
+        private void InitializeBarTooltips()
+        {
+            if (populationBar != null && populationBarTooltipPrefab != null)
+            {
+                SetupBarHoverEvents(populationBar.gameObject, populationBarTooltipPrefab);
+                populationBarTooltipPrefab.SetActive(false);
+            }
+
+            if (fearBar != null && fearBarTooltipPrefab != null)
+            {
+                SetupBarHoverEvents(fearBar.gameObject, fearBarTooltipPrefab);
+                fearBarTooltipPrefab.SetActive(false);
+            }
+
+            if (divineFavorBar != null && divineFavorBarTooltipPrefab != null)
+            {
+                SetupBarHoverEvents(divineFavorBar.gameObject, divineFavorBarTooltipPrefab);
+                divineFavorBarTooltipPrefab.SetActive(false);
+            }
+
+            if (karmaBar != null && karmaBarTooltipPrefab != null)
+            {
+                SetupBarHoverEvents(karmaBar.gameObject, karmaBarTooltipPrefab);
+                karmaBarTooltipPrefab.SetActive(false);
+            }
+        }
+
+        private void SetupBarHoverEvents(GameObject barObject, GameObject tooltipPrefab)
+        {
+            if (barObject == null || tooltipPrefab == null)
+            {
+                return;
+            }
+
+            var existingEventTrigger = barObject.GetComponent<EventTrigger>();
+            if (existingEventTrigger != null)
+            {
+                Destroy(existingEventTrigger);
+            }
+            var eventTrigger = barObject.AddComponent<EventTrigger>();
+
+            var pointerEnter = new EventTrigger.Entry();
+            pointerEnter.eventID = EventTriggerType.PointerEnter;
+            pointerEnter.callback.AddListener((data) => {
+                if (tooltipPrefab != null)
+                {
+                    tooltipPrefab.SetActive(true);
+                }
+            });
+            eventTrigger.triggers.Add(pointerEnter);
+
+            var pointerExit = new EventTrigger.Entry();
+            pointerExit.eventID = EventTriggerType.PointerExit;
+            pointerExit.callback.AddListener((data) => {
+                if (tooltipPrefab != null)
+                {
+                    tooltipPrefab.SetActive(false);
+                }
+            });
+            eventTrigger.triggers.Add(pointerExit);
+        }
+
         private void PauseGame()
         {
             isPaused = true;
-            Time.timeScale = 0f; // Freeze game time
+            Time.timeScale = 0f; 
 
             if (pauseMenuPanel != null)
             {
@@ -249,7 +301,7 @@ namespace Assets.Scripts.Managers
         private void ResumeGame()
         {
             isPaused = false;
-            Time.timeScale = 1f; // Resume game time
+            Time.timeScale = 1f; 
 
             if (pauseMenuPanel != null)
             {
@@ -259,8 +311,8 @@ namespace Assets.Scripts.Managers
 
         private void LoadMainMenu()
         {
-            Time.timeScale = 1f; // Reset time scale before changing scenes
-            SceneManager.LoadScene("MenuScene"); // Change to your main menu scene name
+            Time.timeScale = 1f; 
+            SceneManager.LoadScene("MenuScene"); 
         }
 
         public void UpdateTooltipContent(Button button, Decisions.DecisionType decisionType)
@@ -325,10 +377,8 @@ namespace Assets.Scripts.Managers
 
                 GameState.Instance.currentStats.ClampValues();
 
-                // CRITICAL: Check for endings immediately after buying items
                 GameState.Instance.CheckForEndings();
 
-                // Only show success message if game didn't end
                 if (!GameState.Instance.gameEnded)
                 {
                     if (storeMessageText != null)
@@ -351,12 +401,10 @@ namespace Assets.Scripts.Managers
 
         private void InitializeTooltipSystem()
         {
-            // Create cache of decision effects for quick access
             makedecision.decisionEffectsCache.Clear();
             buttonToTooltipMap.Clear();
             buttonToTextMap.Clear();
 
-            // Map buttons to their respective tooltip panels and text components
             if (decisionButton1 != null && tooltipPanel1 != null)
             {
                 buttonToTooltipMap[decisionButton1] = tooltipPanel1;
@@ -384,8 +432,6 @@ namespace Assets.Scripts.Managers
                 makedecision.decisionEffectsCache[decisionType] = GenerateDecisionEffectsText(decisionType);
             }
 
-
-            // Hide all tooltips initially
             HideAllTooltips();
         }
 
@@ -451,17 +497,14 @@ namespace Assets.Scripts.Managers
             }
 
 
-            // Remove existing EventTrigger if any
             var existingEventTrigger = button.gameObject.GetComponent<EventTrigger>();
             if (existingEventTrigger != null)
             {
                 Destroy(existingEventTrigger);
             }
 
-            // Add new EventTrigger
             var eventTrigger = button.gameObject.AddComponent<EventTrigger>();
 
-            // Pointer Enter event - show THIS button's tooltip
             var pointerEnter = new EventTrigger.Entry();
             pointerEnter.eventID = EventTriggerType.PointerEnter;
             pointerEnter.callback.AddListener((data) => {
@@ -473,7 +516,6 @@ namespace Assets.Scripts.Managers
             });
             eventTrigger.triggers.Add(pointerEnter);
 
-            // Pointer Exit event - hide THIS button's tooltip
             var pointerExit = new EventTrigger.Entry();
             pointerExit.eventID = EventTriggerType.PointerExit;
             pointerExit.callback.AddListener((data) => {
@@ -484,7 +526,6 @@ namespace Assets.Scripts.Managers
             });
             eventTrigger.triggers.Add(pointerExit);
 
-            // Additional: Pointer Click event to ensure tooltips work
             var pointerClick = new EventTrigger.Entry();
             pointerClick.eventID = EventTriggerType.PointerClick;
             pointerClick.callback.AddListener((data) => {
@@ -597,7 +638,6 @@ namespace Assets.Scripts.Managers
         {
             List<Decisions.DecisionType> currentDecisions = Decisions.GetCurrentActiveDecisions();
 
-            // Hide all tooltips first
             HideAllTooltips();
 
             for (int i = 0; i < decisionButtons.Count; i++)
@@ -613,7 +653,6 @@ namespace Assets.Scripts.Managers
                             decisionTexts[i].text = decisionText;
                         }
 
-                        // Update the tooltip content for this button
                         UpdateTooltipContent(decisionButtons[i], currentDecisions[i]);
                     }
                     else
@@ -632,13 +671,11 @@ namespace Assets.Scripts.Managers
             if (postDecisionPanel != null)
                 postDecisionPanel.SetActive(false);
 
-            // Close store when hiding decisions
             if (isStoreOpen && !isAnimating)
             {
                 StartCoroutine(AnimateStorePanel(false));
             }
 
-            // Hide all tooltips when hiding decision
             HideAllTooltips();
 
             if (playerCamera != null)
@@ -670,19 +707,16 @@ namespace Assets.Scripts.Managers
 
             GameState stats = GameState.Instance;
 
-            // Use bars for the four clamped stats; gold remains a numeric Text.
             bool usingBars = populationBar != null || fearBar != null || divineFavorBar != null || karmaBar != null;
 
             if (usingBars)
             {
 
-                // calculate targets (values clamped 0..100 in GameState)
                 targetPopulationFill = populationBar != null ? Mathf.Clamp01(stats.currentStats.population / 100f) : 0f;
                 targetFearFill = fearBar != null ? Mathf.Clamp01(stats.currentStats.fear / 100f) : 0f;
                 targetDivineFavorFill = divineFavorBar != null ? Mathf.Clamp01(stats.currentStats.divineFavor / 100f) : 0f;
                 targetKarmaFill = karmaBar != null ? Mathf.Clamp01(stats.currentStats.karma / 100f) : 0f;
 
-                // animate current fills towards targets
                 float step = barLerpDuration <= 0f ? 1f : (Time.deltaTime / Mathf.Max(0.00001f, barLerpDuration));
 
                 if (populationBar != null)
@@ -709,7 +743,6 @@ namespace Assets.Scripts.Managers
                     karmaBar.fillAmount = currentKarmaFill;
                 }
 
-                // Update gold as number
                 if (goldText != null)
                 {
                     goldText.gameObject.SetActive(true);

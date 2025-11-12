@@ -27,7 +27,7 @@ public class GameState : MonoBehaviour
 
     public GameStats currentStats = new GameStats();
 
-    // Track decision counts for delayed effects
+    // delayed effects
     public int recentExecutions = 0;
     public int recentExiles = 0;
     public int recentForgives = 0;
@@ -37,7 +37,7 @@ public class GameState : MonoBehaviour
     public int trialByOrdealCount = 0;
     public int publicHumiliationCount = 0;
 
-    // New tracking variables
+    // tracking variables
     public int askGodCount = 0;
     public int corruptionLevel = 0;
     public bool divineFavorCrisis = false;
@@ -45,8 +45,6 @@ public class GameState : MonoBehaviour
     public bool revealedGuiltStatus = false;
     public string lastDecisionType = "";
     public List<string> sparedCharacters = new List<string>();
-
-    // Ending tracking variables
     public int roundsAt100Population = 0;
     public int roundsAt0Fear = 0;
     public int roundsAt100DivineFavor = 0;
@@ -70,7 +68,7 @@ public class GameState : MonoBehaviour
     {
         if (gameEnded) return;
 
-        // Immediate endings (critical conditions)
+        // Immediate endings
         if (currentStats.population <= 0)
         {
             TriggerEnding("Population Revolts", "The people have risen up against your tyranny! Your reign has ended in chaos and rebellion.");
@@ -101,7 +99,7 @@ public class GameState : MonoBehaviour
             return;
         }
 
-        // Track consecutive rounds at certain values for special endings
+        // special endings
         if (currentStats.population >= 100)
         {
             roundsAt100Population++;
@@ -152,7 +150,7 @@ public class GameState : MonoBehaviour
 
         Debug.Log($"GAME ENDED: {endingName} - {endingDescription}");
 
-        // Store ending info for the ending scene
+        // info for the ending scene
         PlayerPrefs.SetString("EndingName", endingName);
         PlayerPrefs.SetString("EndingDescription", endingDescription);
         PlayerPrefs.SetInt("FinalPopulation", currentStats.population);
@@ -161,8 +159,6 @@ public class GameState : MonoBehaviour
         PlayerPrefs.SetInt("FinalKarma", currentStats.karma);
         PlayerPrefs.SetInt("FinalGold", currentStats.gold);
         PlayerPrefs.Save();
-
-        // Load ending scene
         SceneManager.LoadScene("EndingScene");
     }
 }

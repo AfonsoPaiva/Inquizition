@@ -93,7 +93,7 @@ public class Characters : Makedecision
 
         int index = random.Next(characterData.names.Count);
 
-        // Get context data with bounds checking
+        // bounds checking
         bool firstTime = index < characterData.characterContext.firstTimeOffender.Count ?
             characterData.characterContext.firstTimeOffender[index] : random.Next(2) == 0;
 
@@ -147,7 +147,6 @@ public class Characters : Makedecision
             dialogueList[random.Next(dialogueList.Count)] : "The decision has been made.";
     }
 
-    // Existing SpawnNewCharacter method remains the same
     public static void SpawnNewCharacter(Makedecision characters, GameObject characterPrefab, Transform spawnPoint)
     {
         if (characterPrefab != null && spawnPoint != null)

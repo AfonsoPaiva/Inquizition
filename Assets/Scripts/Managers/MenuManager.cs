@@ -17,7 +17,7 @@ namespace Assets.Scripts.Managers
                 menuPanel.SetActive(true);
 
             SetupButtons();
-            // When loading the main menu, clear the tutorial session flag
+            //clear the tutorial session flag
             PlayerPrefs.DeleteKey("TutorialShownThisSession");
             PlayerPrefs.Save();
 

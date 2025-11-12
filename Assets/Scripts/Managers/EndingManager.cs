@@ -65,7 +65,6 @@ namespace Assets.Scripts.Managers
                                      $"Gold: {finalGold}";
             }
 
-            // Set the appropriate ending image
             if (endingImage != null)
             {
                 endingImage.sprite = GetEndingSprite(endingName);
@@ -114,7 +113,6 @@ namespace Assets.Scripts.Managers
 
         private void ReturnToMainMenu()
         {
-            // Clean up GameState
             if (GameState.Instance != null)
             {
                 Destroy(GameState.Instance.gameObject);
@@ -125,11 +123,10 @@ namespace Assets.Scripts.Managers
 
         private void PlayAgain()
         {
-            // Mark tutorial as completed so it won't play again
+            // tutorial completed 
             PlayerPrefs.SetInt("TutorialCompleted", 1);
             PlayerPrefs.Save();
 
-            // Clean up GameState
             if (GameState.Instance != null)
             {
                 Destroy(GameState.Instance.gameObject);
